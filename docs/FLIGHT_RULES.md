@@ -21,16 +21,6 @@ what to do when things go wrong.
 
 ### Problem
 
-I deployed a PostgreSQL instance on Amazon Web Services (AWS) Relational
-Database Service (RDS) with the intention to test whether extension `pg_cron`
-could be created, and whether it was indeed supported by AWS, as per [this blog
-post](https://www.alibabacloud.com/help/doc-detail/150355.htm) by Alibaba Cloud
-discussing `pg_cron` configuration on AWS RDS last updated on February 24th of
-this year (2020). Using `pg_cron` is imperative to TinyDevCRM as it enables
-automated event generation, and precludes a need to consider a hybrid cloud
-approach (Citus Cloud supports `pg_cron`, but since Citus Data was acquired by
-Microsoft, it is only available via Azure).
-
 When I attempt to connect to the RDS instance using a default configuration for
 test / free tier instances, I get this error:
 
@@ -165,3 +155,37 @@ group. To do this:
 
     I was able to successfully connect to the RDS instance in `psql` using this
     method.
+
+## 2. Use `pg_cron` with AWS RDS
+
+### Problem
+
+I deployed a PostgreSQL instance on Amazon Web Services (AWS) Relational
+Database Service (RDS) with the intention to test whether extension `pg_cron`
+could be created, and whether it was indeed supported by AWS, as per [this blog
+post](https://www.alibabacloud.com/help/doc-detail/150355.htm) by Alibaba Cloud
+discussing `pg_cron` configuration on AWS RDS last updated on February 24th of
+this year (2020). Using `pg_cron` is imperative to TinyDevCRM as it enables
+automated event generation, and precludes a need to consider a hybrid cloud
+approach (Citus Cloud supports `pg_cron`, but since Citus Data was acquired by
+Microsoft, it is only available via Azure).
+
+### Solution
+
+As of this writing (February 25th, 2020), I confirmed that AWS RDS does not
+support extension `pg_cron`. I checked this via `psql` query `SHOW
+rds.extensions;`
+
+```bash
+postgres=> CREATE EXTENSION pg_cron;
+ERROR:  Extension "pg_cron" is not supported by Amazon RDS
+DETAIL:  Installing the extension "pg_cron" failed, because it is not on the list of extensions supported by Amazon RDS.
+HINT:  Amazon RDS allows users with rds_superuser role to install supported extensions. See: SHOW rds.extensions;
+postgres=>
+```
+
+This is the full list of RDS extensions supported by AWS RDS PostgreSQL:
+
+```bash
+address_standardizer, address_standardizer_data_us, amcheck, aws_commons, aws_s3, bloom, btree_gin, btree_gist, citext, cube, dblink, dict_int, dict_xsyn, earthdistance, fuzzystrmatch, hll, hstore, hstore_plperl, intagg, intarray, ip4r, isn, jsonb_plperl, log_fdw, ltree, orafce, pageinspect, pgaudit, pgcrypto, pglogical, pgrouting, pgrowlocks, pgstattuple, pgtap, pg_buffercache, pg_freespacemap, pg_hint_plan, pg_prewarm, pg_repack, pg_similarity, pg_stat_statements, pg_transport, pg_trgm, pg_visibility, plcoffee, plls, plperl, plpgsql, plprofiler, pltcl, plv8, postgis, postgis_tiger_geocoder, postgis_topology, postgres_fdw, prefix, sslinfo, tablefunc, test_parser, tsm_system_rows, tsm_system_time, unaccent, uuid-ossp
+```
