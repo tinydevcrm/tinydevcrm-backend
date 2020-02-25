@@ -46,6 +46,14 @@ $
 
 ### Solution
 
+1. Set public accessibility for the RDS instance to "on" to grant the database a
+   public IP address.
+
+2. Add an inbound rule to the VPC security group for "all traffic" and my IP
+   address (ideally VPN server IP address).
+
+__________
+
 Using the [AWS RDS
 documentation](https://aws.amazon.com/premiumsupport/knowledge-center/rds-cannot-connect/)
 on why a local client cannot connect to the RDS instance, I used `nslookup` in
@@ -110,3 +118,50 @@ the following advice is given about usual errors:
 > If you receive an error like `FATAL: database some-name does not exist when
 > connecting`, try using the default database name postgres for the --dbname
 > option.
+
+By default, public accessibility to the RDS instance is turned off, and access
+is only granted to EC2 instances registered with the VPC security group. This
+may increase the importance of separating out concerns and catering ops towards
+using AWS Elastic Beanstalk or even AWS Amplify for simplicity (which would
+detract from the goal of making a single deployable from anywhere).
+
+After modifying the RDS instance to enable public accessibility, `psql` from
+local client continues to fail. I need to add an inbound rule to the security
+group. To do this:
+
+1.  Go to the [AWS RDS home console](https://console.aws.amazon.com/rds/home).
+
+2.  Click on "DB Instances" link.
+
+3.  In the "Databases" window, select the appropriate database resource (e.g.
+    `database-1` by database identifier).
+
+4.  In the "$DATABASE" window, in the "Connectivity & Security" tab, click on
+    the appropriate VPC security group in the top right of the card, which
+    should take you to the "Resource Groups" window in the AWS Elastic Compute
+    Cloud (EC2) window.
+
+5.  Click on the "Actions" button (next to the blue "Create Security Group"
+    window) and in the menu dropdown, click on "Edit Inbound Rules". Click on
+    "Add Rule", select "All Traffic", and for the "Source" selection, hit "My
+    IP". I'm connecting via my VPN server, which should have a fixed IP address.
+
+6.  Attempt to re-connect, using command:
+
+    ```bash
+    $ psql \
+        --host=database-1.cxkynbxqwzwy.us-east-1.rds.amazonaws.com \
+        --port=5432 \
+        --username=postgres \
+        --password \
+        --dbname=postgres
+    Password:
+    psql (11.7 (Ubuntu 11.7-2.pgdg19.10+1), server 11.5)
+    SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: off)
+    Type "help" for help.
+
+    postgres=>
+    ```
+
+    I was able to successfully connect to the RDS instance in `psql` using this
+    method.
