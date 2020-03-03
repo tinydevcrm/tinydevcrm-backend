@@ -100,6 +100,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Custom user model for JSON Web Token authentication
+# https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
+AUTH_USER_MODEL = 'auth.CustomUser'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
