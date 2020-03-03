@@ -189,3 +189,65 @@ This is the full list of RDS extensions supported by AWS RDS PostgreSQL:
 ```bash
 address_standardizer, address_standardizer_data_us, amcheck, aws_commons, aws_s3, bloom, btree_gin, btree_gist, citext, cube, dblink, dict_int, dict_xsyn, earthdistance, fuzzystrmatch, hll, hstore, hstore_plperl, intagg, intarray, ip4r, isn, jsonb_plperl, log_fdw, ltree, orafce, pageinspect, pgaudit, pgcrypto, pglogical, pgrouting, pgrowlocks, pgstattuple, pgtap, pg_buffercache, pg_freespacemap, pg_hint_plan, pg_prewarm, pg_repack, pg_similarity, pg_stat_statements, pg_transport, pg_trgm, pg_visibility, plcoffee, plls, plperl, plpgsql, plprofiler, pltcl, plv8, postgis, postgis_tiger_geocoder, postgis_topology, postgres_fdw, prefix, sslinfo, tablefunc, test_parser, tsm_system_rows, tsm_system_time, unaccent, uuid-ossp
 ```
+
+## 3. Delete a superuser from Django
+
+### Problem
+
+After switching to Django from Flask, and committing to implementing a JSON Web
+Token authentication scheme, I'm implementing a custom user in order to work
+around the templated Django authentication scheme according [to the Django
+documentation](https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project).
+However, after mistakenly creating a superuser, deleting a superuser is not so
+straightforward. [This Stack Overflow
+post](https://stackoverflow.com/a/26713562/1497211) works fine for deleting an
+ordinary Django user, but it will fail for a custom user:
+
+```bash
+$ python manage.py shell
+Python 3.8.1 (default, Jan  8 2020, 22:29:32)
+[GCC 7.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from django.contrib.auth.models import User
+>>> User.objects.get(username='$USERNAME', is_superuser=True).delete()
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/path/to/manager.py", line 184, in __get__
+    raise AttributeError(
+AttributeError: Manager isn't available; 'auth.User' has been swapped for 'authentication.CustomUser'
+```
+
+### Solution
+
+Instead of referencing `django.contrib.auth.models`, reference `$PROJECT.models`
+instead:
+
+```bash
+>>> authentication.models.CustomUser
+<class 'authentication.models.CustomUser'>
+>>> authentication.models.CustomUser.objects
+<django.contrib.auth.models.UserManager object at 0x7f9e78dbb0d0>
+>>> authentication.models.CustomUser.objects.get(username='$USERNAME', is_superuser=True)
+<CustomUser: $USERNAME>
+>>> authentication.models.CustomUser.objects.get(username='$USERNAME', is_superuser=True).delete()
+(1, {'admin.LogEntry': 0, 'authentication.CustomUser_groups': 0, 'authentication.CustomUser_user_permissions': 0, 'authentication.CustomU
+ser': 1})
+```
+
+Keep in mind that the `models.py` may not be exposed outside of the package:
+
+```bash
+>>> from authentication import CustomUser
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+ImportError: cannot import name 'CustomUser' from 'authentication' (/path/to/api.tinydevcrm.com/src/authentication/__init__.py$
+>>> import authentication
+>>> authentication.CustomUser
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+AttributeError: module 'authentication' has no attribute 'CustomUser'
+>>> dir(authentication)
+# When I discovered models were namespaced via 'models'
+['__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', 'admin', 'models'$
+```
