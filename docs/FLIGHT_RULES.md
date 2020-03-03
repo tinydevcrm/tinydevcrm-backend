@@ -251,3 +251,20 @@ AttributeError: module 'authentication' has no attribute 'CustomUser'
 # When I discovered models were namespaced via 'models'
 ['__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', 'admin', 'models'$
 ```
+
+## 4. JSON Web Token does not appear to be verified on https://jwt.io
+
+### Problem
+
+When I entered in my JWT refresh token, a large red validation error message
+showed up, saying "Signature unverified". I thought my JWT refresh token was
+copied wrong, or the token was incorrectly generated due to a dependency error.
+
+### Solution
+
+The JWT token was successfully decoded, as could be seen in the "Decode" tab
+next to the "Encode" tab. To verify a JWT token, you need the correct encryption
+algorithm (in this case, HS256 or the default), *as well as the secret key*.
+After entering in the secret key (which should only be done for development and
+never test or production environments), a blue check appears that says
+"Signature Verified".
