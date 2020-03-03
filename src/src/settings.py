@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'auth'
+    # 'authentication'
 ]
 
 MIDDLEWARE = [
@@ -100,9 +100,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Custom user model for JSON Web Token authentication
-# https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
-AUTH_USER_MODEL = 'auth.CustomUser'
+# # Custom user model for JSON Web Token authentication
+# # https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
+# AUTH_USER_MODEL = 'authentication.CustomUser'
 
 
 # Internationalization
