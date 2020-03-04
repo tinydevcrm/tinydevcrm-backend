@@ -268,3 +268,64 @@ algorithm (in this case, HS256 or the default), *as well as the secret key*.
 After entering in the secret key (which should only be done for development and
 never test or production environments), a blue check appears that says
 "Signature Verified".
+
+## 5. Debug a Django REST API call
+
+### Problem
+
+I've favored using `ipdb` to set traces, and using `ipdb` in Flask is trivial;
+you can drop it in anywhere within the Python code, and `flask run` will result
+in the `ipdb` context being tripped properly. Django is not that simple; adding
+a `ipdb` trace to `serializers.py` or `settings.py` or `urls.py` may not work
+properly, since the server does appear to pre-process and cache things like
+configuration settings before it becomes live.
+
+### Solution
+
+From [this Stack Overflow answer](https://stackoverflow.com/a/1118271/1497211),
+you can debug a Django view function by adding a `pdb` trace within a given HTTP
+method:
+
+```python
+# /path/to/$PROJECT/views.py
+class CustomUserCreate(APIView):
+    def post(self, request, format='json'):
+        import ipdb
+        ipdb.set_trace()
+        # rest of function
+```
+
+Start up the Django server:
+
+```bash
+conda activate $CONDA_ENV && python -m ipdb /path/to/manage.py runserver
+```
+
+Then, you can submit a given `curl` request:
+
+```bash
+curl --header "Content-Type: application/json" -X POST http://127.0.0.1:8000/api/user/create/ --data '{"email": "test2@test.com", "username": "test2", "password": "12345678"}'
+
+# Or:
+curl \
+  --header "Content-Type: application/json" \
+  -X POST \
+  --data '{"email": "test2@test.com", "username": "test2", "password": "12345678"}' \
+  http://127.0.0.1:8000/api/user/create/
+```
+
+This should drop you into a `pdb` context:
+
+```python
+System check identified no issues (0 silenced).
+March 04, 2020 - 18:18:13
+Django version 3.0.3, using settings 'src.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+> /path/to/views.py(22)post()
+     21
+---> 22         serializer = CustomUserSerializer(data=request.data)
+     23         if serializer.is_valid():
+
+ipdb>
+```
