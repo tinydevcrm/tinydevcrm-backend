@@ -5,10 +5,15 @@ URL configuration for 'authentication'.
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 
-from .views import ObtainTokenPairWithColorView
+from .views import ObtainTokenPairWithColorView, CustomUserCreate
 
 
 urlpatterns = [
+    path(
+        'user/create/',
+        CustomUserCreate.as_view(),
+        name='create_user'
+    ),
     # Override simplejwt stock token
     path(
         'token/obtain/',
