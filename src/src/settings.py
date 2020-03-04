@@ -41,18 +41,24 @@ INSTALLED_APPS = [
     # Custom Django extension to customize users for JWT authentication
     'authentication',
     # Django REST Framework
-    'rest_framework'
+    'rest_framework',
     # 'SimpleJWT' does not need to be added to INSTALLED_APPS.
+    # Addressing CORS failures
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # CORS middleware; I think from the README Django middleware ordering is
+    # important, and must come before
+    # 'django.middleware.common.CommonMiddleware'
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
 ROOT_URLCONF = 'src.urls'
@@ -161,3 +167,11 @@ SIMPLE_JWT = {
     ),
     'TOKEN_TYPE_CLAIM': 'token_type'
 }
+
+
+# CORS settings.
+CORS_ORIGIN_WHITELIST = [
+    'https://dashboard.tinydevcrm.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+]
