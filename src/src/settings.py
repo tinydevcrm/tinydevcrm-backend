@@ -132,11 +132,13 @@ STATIC_URL = '/static/'
 
 # Django REST Framework settings #
 REST_FRAMEWORK = {
+    # Tuples must have commas to separate values, otherwise will resolve to
+    # strings: https://stackoverflow.com/a/53377480/1497211
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated'
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
 
