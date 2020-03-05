@@ -38,15 +38,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Custom Django extension to customize users for JWT authentication
-    'authentication',
     # Django REST Framework
     'rest_framework',
     # 'SimpleJWT' does not need to be added to INSTALLED_APPS.
     # Addressing CORS failures
     'corsheaders',
     # DRF SimpleJWT token blacklist for BlacklistMixin
-    'rest_framework_simplejwt.token_blacklist'
+    'rest_framework_simplejwt.token_blacklist',
+
+    # Custom Django extension to customize users for JWT authentication
+    'authentication',
+
+    # V1
+    'v1'
 ]
 
 MIDDLEWARE = [

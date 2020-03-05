@@ -9,7 +9,7 @@ from django.urls import include
 from django.urls import path
 
 
-urlpatters = [
+urlpatterns = [
     path(
         'auth/',
         include('v1.auth.urls')
