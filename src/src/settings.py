@@ -46,11 +46,9 @@ INSTALLED_APPS = [
     # DRF SimpleJWT token blacklist for BlacklistMixin
     'rest_framework_simplejwt.token_blacklist',
 
-    # Custom Django extension to customize users for JWT authentication
-    'authentication',
-
     # V1
-    'v1'
+    'v1',
+    'v1.authentication'
 ]
 
 MIDDLEWARE = [
@@ -119,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Custom user model for JSON Web Token authentication
 # https://docs.djangoproject.com/en/3.0/topics/auth/customizing/#using-a-custom-user-model-when-starting-a-project
-AUTH_USER_MODEL = 'authentication.CustomUser'
+AUTH_USER_MODEL = 'v1.authentication.CustomUser'
 
 
 # Internationalization
