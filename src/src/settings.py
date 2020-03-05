@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'SimpleJWT' does not need to be added to INSTALLED_APPS.
     # Addressing CORS failures
-    'corsheaders'
+    'corsheaders',
+    # DRF SimpleJWT token blacklist for BlacklistMixin
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 MIDDLEWARE = [
