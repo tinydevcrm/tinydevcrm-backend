@@ -8,7 +8,8 @@ from rest_framework_simplejwt import views as jwt_views
 from .views import (
     ObtainTokenPairWithColorView,
     CustomUserCreate,
-    HelloWorldView
+    HelloWorldView,
+    LogoutAndBlacklistRefreshTokenForUserView
 )
 
 
@@ -33,5 +34,10 @@ urlpatterns = [
         'hello/',
         HelloWorldView.as_view(),
         name='hello_world'
+    ),
+    path(
+        'blacklist/',
+        LogoutAndBlacklistRefreshTokenForUserView.as_view(),
+        name='blacklist'
     )
 ]
