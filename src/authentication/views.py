@@ -1,3 +1,7 @@
+"""
+Authentication service custom views.
+"""
+
 from django.shortcuts import render
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -8,8 +12,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import CustomTokenObtainPairSerializer, CustomUserSerializer
 
 
-# class ObtainTokenPairWithColorView(TokenObtainPairView):
-#     serializer_class = CustomTokenObtainPairSerializer
+class CustomObtainTokenPairView(TokenObtainPairView):
+    """
+    View for generating a custom JWT.
+    """
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class CustomUserRegister(APIView):

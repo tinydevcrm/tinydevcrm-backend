@@ -6,8 +6,8 @@ from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 
 from .views import (
-    # ObtainTokenPairWithColorView,
     CustomUserRegister,
+    CustomObtainTokenPairView,
     # HelloWorldView,
     # LogoutAndBlacklistRefreshTokenForUserView
 )
@@ -19,12 +19,12 @@ urlpatterns = [
         CustomUserRegister.as_view(),
         name='users.register'
     ),
-    # # Override simplejwt stock token
-    # path(
-    #     'token/obtain/',
-    #     ObtainTokenPairWithColorView.as_view(),
-    #     name='token_create'
-    # ),
+    # Override simplejwt stock token
+    path(
+        'tokens/obtain/',
+        CustomObtainTokenPairView.as_view(),
+        name='tokens.obtain'
+    ),
     # path(
     #     'token/refresh/',
     #     jwt_views.TokenRefreshView.as_view(),
