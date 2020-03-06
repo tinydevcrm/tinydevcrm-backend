@@ -25,11 +25,11 @@ urlpatterns = [
         CustomObtainTokenPairView.as_view(),
         name='tokens.obtain'
     ),
-    # path(
-    #     'token/refresh/',
-    #     jwt_views.TokenRefreshView.as_view(),
-    #     name='token_refresh'
-    # ),
+    path(
+        'tokens/refresh/',
+        jwt_views.TokenRefreshView.as_view(),
+        name='tokens.refresh'
+    ),
     # path(
     #     'hello/',
     #     HelloWorldView.as_view(),
