@@ -97,11 +97,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # make the data model less brittle and more flexible.
     full_name = models.CharField(max_length=255, null=True)
 
-    # Use field 'email' as the primary username, since emails address syntax is
-    # defined in IEEE RFC-5322: https://tools.ietf.org/html/rfc5322, and because
-    # framework likely will not require users to identify each other. If
-    # additional emails are registered, use 'secondary_emails' or similar to
-    # handle
+    # Use field 'primary_email' as the primary username, since emails address
+    # syntax is defined in IEEE RFC-5322: https://tools.ietf.org/html/rfc5322,
+    # and because framework likely will not require users to identify each
+    # other. If additional emails are registered, use 'secondary_emails' or
+    # similar as a separate field.
     primary_email = models.EmailField(unique=True)
 
     # Default permission levels.
