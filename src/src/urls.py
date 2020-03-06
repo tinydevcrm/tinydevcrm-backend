@@ -24,6 +24,14 @@ from django.urls import path
 from django.urls import re_path
 
 
+# TODO: Review other methods of versioning APIs. Apparently, one other popular
+# method for API versioning includes adding an 'X-' HTTP header to denote API
+# versioning. This may reduce the amount of code that needs to be rewritten, at
+# the cost of code / codebase clarity. See this Stack Overflow answer:
+# https://stackoverflow.com/a/21839842/1497211, and this Stack Overflow answer:
+# https://stackoverflow.com/a/14380004/1497211, with reference to GitHub's V3
+# API: https://developer.github.com/v3/media/, and 'X-GitHub-Media-Type:
+# github.v3'.
 urlpatterns = [
     path(
         'admin/',
@@ -38,5 +46,15 @@ urlpatterns = [
             ),
         namespace='v1'
         )
-    )
+    ),
+    re_path(
+        r'^v1/data/',
+        include(
+            (
+                'concrete_data.urls',
+                'concrete_data'
+            ),
+        namespace='v1'
+        )
+    ),
 ]
