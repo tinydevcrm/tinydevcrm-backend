@@ -1,11 +1,17 @@
 from django.contrib import admin
 
-from .models import CustomUser
+from . import models
 
 
 # Register your models here.
 class CustomUserAdmin(admin.ModelAdmin):
-    model = CustomUser
+    """
+    Registration of models.CustomUser with the Django admin dashboard.
+    """
+    model = models.CustomUser
 
 
-admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(
+    models.CustomUser,
+    CustomUserAdmin
+)
