@@ -8,8 +8,8 @@ from rest_framework_simplejwt import views as jwt_views
 from .views import (
     CustomUserRegister,
     CustomObtainTokenPairView,
+    CustomBlacklistRefreshTokenView,
     # HelloWorldView,
-    # LogoutAndBlacklistRefreshTokenForUserView
 )
 
 
@@ -30,14 +30,15 @@ urlpatterns = [
         jwt_views.TokenRefreshView.as_view(),
         name='tokens.refresh'
     ),
+    path(
+        'tokens/blacklist/',
+        CustomBlacklistRefreshTokenView.as_view(),
+        name='tokens.blacklist'
+    )
+
     # path(
     #     'hello/',
     #     HelloWorldView.as_view(),
     #     name='hello_world'
     # ),
-    # path(
-    #     'blacklist/',
-    #     LogoutAndBlacklistRefreshTokenForUserView.as_view(),
-    #     name='blacklist'
-    # )
 ]
