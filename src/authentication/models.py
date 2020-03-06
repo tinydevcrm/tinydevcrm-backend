@@ -19,7 +19,15 @@ class CustomUserManager(BaseUserManager):
     This logic is mostly taken from this tutorial:
     https://testdriven.io/blog/django-custom-user-model/#abstractuser-vs-abstractbaseuser
     """
-    def create_user(self, primary_email, password, full_name, **kwargs):
+    def create_user(
+            self,
+            primary_email,
+            password,
+            full_name=None,
+            is_staff=False,
+            is_superuser=False,
+            **kwargs
+    ):
         """
         Create and save an instance of CustomUser with the given primary_email
         and password.
@@ -33,11 +41,22 @@ class CustomUserManager(BaseUserManager):
             full_name=full_name
         )
         user.set_password(password)
+
+        # Set permission levels.
+        user.is_active = True
+        user.is_staff = is_staff
+        user.is_superuser = is_superuser
+
         user.save()
 
         return user
 
-    def create_superuser(self, primary_email, password, full_name, **kwargs):
+    def create_superuser(self,
+        primary_email,
+        password,
+        full_name=None,
+        **kwargs
+    ):
         """
         Create and save an instance of CustomUser with superuser privileges.
         """
@@ -45,17 +64,10 @@ class CustomUserManager(BaseUserManager):
             primary_email,
             password,
             full_name,
+            is_staff=True,
+            is_superuser=True,
             **kwargs
         )
-
-        # NOTE: Might have to issue an additional save with superuser
-        # properties. Ideally, these properties can be set in kwargs, and passed
-        # to method 'create_user()', which will handle saves at time of user
-        # creation.
-        new_user.is_staff = True
-        new_user.is_active = True
-        new_user.is_superuser = True
-        new_user.save()
 
         return new_user
 
@@ -79,7 +91,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     #
     # Max length of models.CharField can always be 255:
     # https://stackoverflow.com/a/2597994/1497211
-    full_name = models.CharField(max_length=255)
+    #
+    # Since 'full_name' is just a tag to be carried around and ideally won't be
+    # relied on by other portions of the stack, make it nullable in order to
+    # make the data model less brittle and more flexible.
+    full_name = models.CharField(max_length=255, null=True)
 
     # Use field 'email' as the primary username, since emails address syntax is
     # defined in IEEE RFC-5322: https://tools.ietf.org/html/rfc5322, and because
@@ -94,8 +110,4 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'primary_email'
-    # NOTE: I'm not sure whether it's a good idea to make a full name required.
-    # Intended usage at the moment is just as a tag, while the email address
-    # should be carried around as the only unique constraint. Having too many
-    # unique constraints may make the data model brittle down the line.
-    REQUIRED_FIELDS = ['full_name']
+    REQUIRED_FIELDS = []
