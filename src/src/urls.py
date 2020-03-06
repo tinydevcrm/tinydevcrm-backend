@@ -32,6 +32,10 @@ from django.urls import re_path
 # https://stackoverflow.com/a/14380004/1497211, with reference to GitHub's V3
 # API: https://developer.github.com/v3/media/, and 'X-GitHub-Media-Type:
 # github.v3'.
+#
+# Django system check warning '?: (urls.W005) URL namespace 'v1' isn't unique.
+# You may not be able to reverse all URLs in this namespace' arrives from this
+# code block.
 urlpatterns = [
     path(
         'admin/',
