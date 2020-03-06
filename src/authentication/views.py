@@ -58,11 +58,3 @@ class CustomBlacklistRefreshTokenView(APIView):
             return Response(
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-
-# class HelloWorldView(APIView):
-#     def get(self, request):
-#         return Response(
-#             data={'hello': 'world'},
-#             status=status.HTTP_200_OK
-#         )

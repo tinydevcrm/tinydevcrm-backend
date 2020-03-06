@@ -9,7 +9,6 @@ from .views import (
     CustomUserRegister,
     CustomObtainTokenPairView,
     CustomBlacklistRefreshTokenView,
-    # HelloWorldView,
 )
 
 
@@ -19,7 +18,6 @@ urlpatterns = [
         CustomUserRegister.as_view(),
         name='users.register'
     ),
-    # Override simplejwt stock token
     path(
         'tokens/obtain/',
         CustomObtainTokenPairView.as_view(),
@@ -34,11 +32,5 @@ urlpatterns = [
         'tokens/blacklist/',
         CustomBlacklistRefreshTokenView.as_view(),
         name='tokens.blacklist'
-    )
-
-    # path(
-    #     'hello/',
-    #     HelloWorldView.as_view(),
-    #     name='hello_world'
-    # ),
+    ),
 ]
