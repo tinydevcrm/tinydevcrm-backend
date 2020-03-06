@@ -1,39 +1,50 @@
 """
-Django REST Framework custom serializers.
+Custom serializers for authentication service.
 """
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import CustomUser
+from . import models
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        token = super(MyTokenObtainPairSerializer, cls).get_token(user)
-        # Add custom claimns
-        token['fav_color'] = user.fav_color
+        """
+        Gets a token, and adds custom attributes / claims, before returning to
+        the public view.
+        """
+        token = super(
+            CustomTokenObtainPairSerializer,
+            cls
+        ).get_token(user)
 
         return token
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """
-    Currently unused in preference of the below.
-    """
-    email = serializers.EmailField(
-        required=True
-    )
-    username = serializers.CharField()
-    password = serializers.CharField(min_length=8, write_only=True)
+    (I'm guessing) serializes a model for direct writes to the database.
 
+    TODO: Write a better docstring
+    """
     class Meta:
-        model = CustomUser
-        fields = ('email', 'username', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
+        """
+        TODO: Replace docstring, once I know how this class works and why it is
+        necessary (copied from tutorial)
+        """
+        model = models.CustomUser
+        fields = ('full_name', 'primary_email', 'password')
+        extra_kwargs = {
+            'password': {
+                'write_only': True
+            }
+        }
 
     def create(self, validated_data):
+        # TODO: Not sure whether create() can be renamed to register(), who
+        # calls this method?
         password = validated_data.pop('password', None)
         # As long as the fields are the same, we can just use this
         instance = self.Meta.model(**validated_data)
