@@ -1,5 +1,5 @@
 """
-Custom serializers for authentication service.
+Authentication service custom serializers.
 """
 
 from rest_framework import serializers
@@ -9,30 +9,31 @@ from . import models
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Serializer to customize JSON Web token claim:
+    https://github.com/davesque/django-rest-framework-simplejwt#customizing-token-claims
+
+    This may (or may not) help in creating permissioned public APIs:
+    https://auth0.com/blog/using-json-web-tokens-as-api-keys/
+    """
     @classmethod
     def get_token(cls, user):
-        """
-        Gets a token, and adds custom attributes / claims, before returning to
-        the public view.
-        """
-        token = super(
-            CustomTokenObtainPairSerializer,
-            cls
-        ).get_token(user)
+        token = super().get_token(user)
+
+        # NOTE: Add custom JWT claims here.
 
         return token
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
     """
-    (I'm guessing) serializes a model for direct writes to the database.
-
-    TODO: Write a better docstring
+    Serializes REST API JSON data to database model.
     """
     class Meta:
         """
-        TODO: Replace docstring, once I know how this class works and why it is
-        necessary (copied from tutorial)
+        This class models models.CustomUser, and enforces a hard failure if
+        incoming data doesn't match the Django model (which mirrors the data
+        representation in the database).
         """
         model = models.CustomUser
         fields = ('full_name', 'primary_email', 'password')
@@ -43,10 +44,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # TODO: Not sure whether create() can be renamed to register(), who
-        # calls this method?
+        # NOTE: Not sure whether create() can be renamed to register(), who
+        # calls this method. Doesn't matter when it comes to API endpoint
+        # naming.
         password = validated_data.pop('password', None)
-        # As long as the fields are the same, we can just use this
         instance = self.Meta.model(**validated_data)
         if password is not None:
             instance.set_password(password)
