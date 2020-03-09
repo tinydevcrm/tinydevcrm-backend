@@ -26,7 +26,10 @@ SECRET_KEY = '493u_f_q3uqcs4%sq+_v3ue$la_jfpv-j(#*&0@^eu)2*u#bl6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    # AWS Elastic Beanstalk default CNAME
+    'tinydevcrm-api.us-west-2.elasticbeanstalk.com'
+]
 
 
 # Application definition
