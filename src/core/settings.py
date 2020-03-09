@@ -27,6 +27,9 @@ SECRET_KEY = '493u_f_q3uqcs4%sq+_v3ue$la_jfpv-j(#*&0@^eu)2*u#bl6'
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    # localhost
+    '127.0.0.1',
+    'localhost',
     # AWS Elastic Beanstalk default CNAME
     'tinydevcrm-api.us-west-2.elasticbeanstalk.com'
 ]
