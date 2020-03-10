@@ -52,12 +52,10 @@ INSTALLED_APPS = [
     # DRF SimpleJWT token blacklist for BlacklistMixin
     'rest_framework_simplejwt.token_blacklist',
 
-    # Source #
-    'src',
     # Authentication service #
-    'src.authentication',
+    'authentication',
     # Concrete data service #
-    'src.concrete_data',
+    'concrete_data',
 ]
 
 MIDDLEWARE = [
@@ -74,7 +72,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
-ROOT_URLCONF = 'src.core.urls'
+ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
@@ -92,7 +90,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'src.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database
