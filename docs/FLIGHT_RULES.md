@@ -329,3 +329,48 @@ Quit the server with CONTROL-C.
 
 ipdb>
 ```
+
+## 6. Debug an Elastic Beanstalk application deployment issue
+
+### Problem
+
+Looking at `eb health` did not help, since it only gives information regarding
+HTTP statuses for each AWS Elastic Beanstalk deployment instance. Looking at the
+AWS Elastic Beanstalk GUI console did not help, since the logs were not rich
+enough in order to deduce the actual problem. Looking at `eb config` did not
+help either because of the numerous deployment settings.
+
+### Solution
+
+Looking at `eb logs` helped resolve this issue. A section of file `/var/log/httpd/error_log` indicated the following:
+
+```text
+[Mon Mar 09 21:31:07.670251 2020] [:error] [pid 28463] [remote 172.31.15.94:52] ModuleNotFoundError: No module named 'src.settings'
+[Mon Mar 09 21:31:08.883469 2020] [:error] [pid 28463] [remote 172.31.41.113:17464] mod_wsgi (pid=28463): Target WSGI script '/opt/python/current/app/src/src/wsgi.py' cannot be loaded as Python module.
+[Mon Mar 09 21:31:08.883518 2020] [:error] [pid 28463] [remote 172.31.41.113:17464] mod_wsgi (pid=28463): Exception occurred processing WSGI script '/opt/python/current/app/src/src/wsgi.py'.
+[Mon Mar 09 21:31:08.883660 2020] [:error] [pid 28463] [remote 172.31.41.113:17464] Traceback (most recent call last):
+[Mon Mar 09 21:31:08.883706 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/current/app/src/src/wsgi.py", line 16, in <module>
+[Mon Mar 09 21:31:08.883710 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     application = get_wsgi_application()
+[Mon Mar 09 21:31:08.883726 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/local/lib/python3.6/site-packages/django/core/wsgi.py", line 12, in get_wsgi_application
+[Mon Mar 09 21:31:08.883730 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     django.setup(set_prefix=False)
+[Mon Mar 09 21:31:08.883735 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/local/lib/python3.6/site-packages/django/__init__.py", line 19, in setup
+[Mon Mar 09 21:31:08.883739 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     configure_logging(settings.LOGGING_CONFIG, settings.LOGGING)
+[Mon Mar 09 21:31:08.883744 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/local/lib/python3.6/site-packages/django/conf/__init__.py", line 76, in __getattr__
+[Mon Mar 09 21:31:08.883747 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     self._setup(name)
+[Mon Mar 09 21:31:08.883752 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/local/lib/python3.6/site-packages/django/conf/__init__.py", line 63, in _setup
+[Mon Mar 09 21:31:08.883755 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     self._wrapped = Settings(settings_module)
+[Mon Mar 09 21:31:08.883760 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/local/lib/python3.6/site-packages/django/conf/__init__.py", line 142, in __init__
+[Mon Mar 09 21:31:08.883764 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     mod = importlib.import_module(self.SETTINGS_MODULE)
+[Mon Mar 09 21:31:08.883769 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "/opt/python/run/venv/lib64/python3.6/importlib/__init__.py", line 126, in import_module
+[Mon Mar 09 21:31:08.883772 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]     return _bootstrap._gcd_import(name[level:], package, level)
+[Mon Mar 09 21:31:08.883777 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "<frozen importlib._bootstrap>", line 994, in _gcd_import
+[Mon Mar 09 21:31:08.883783 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "<frozen importlib._bootstrap>", line 971, in _find_and_load
+[Mon Mar 09 21:31:08.883788 2020] [:error] [pid 28463] [remote 172.31.41.113:17464]   File "<frozen importlib._bootstrap>", line 953, in _find_and_load_unlocked
+[Mon Mar 09 21:31:08.883804 2020] [:error] [pid 28463] [remote 172.31.41.113:17464] ModuleNotFoundError: No module named 'src.settings'
+[Mon Mar 09 21:31:10.617469 2020] [mpm_prefork:notice] [pid 28458] AH00169: caught SIGTERM, shutting down
+```
+
+This led to find [this Stack Overflow
+answer](https://stackoverflow.com/a/7887521/1497211) regarding issues around
+your Django app name vs. your core folder name. From this information, I changed
+`src/src` to `src/core`, and submitted a redeployment.
