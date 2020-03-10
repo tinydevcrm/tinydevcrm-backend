@@ -45,8 +45,8 @@ urlpatterns = [
         r'^v1/auth/',
         include(
             (
-                'authentication.urls',
-                'authentication'
+                'src.authentication.urls',
+                'src.authentication'
             ),
         namespace='v1'
         )
@@ -55,8 +55,8 @@ urlpatterns = [
         r'^v1/data/',
         include(
             (
-                'concrete_data.urls',
-                'concrete_data'
+                'src.concrete_data.urls',
+                'src.concrete_data'
             ),
         namespace='v1'
         )
