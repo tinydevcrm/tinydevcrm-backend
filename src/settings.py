@@ -31,7 +31,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     # AWS Elastic Beanstalk default CNAME
-    'http://tinydevcrm-api-dev.eba-ndx6jpqs.us-west-2.elasticbeanstalk.com'
+    'tinydevcrm-api-dev2.eba-ga9m6we4.us-west-2.elasticbeanstalk.com'
 ]
 
 
