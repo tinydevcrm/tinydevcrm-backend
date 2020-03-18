@@ -4,7 +4,7 @@
 FROM python:3.8.0-alpine
 
 # set work directory
-ARG BASEDIR='/app'
+ARG BASEDIR='/usr/src/app'
 
 WORKDIR ${BASEDIR}
 
@@ -22,7 +22,7 @@ COPY ./conf/requirements.txt ${BASEDIR}/requirements.txt
 RUN pip install -r requirements.txt
 
 # copy entrypoint.sh
-COPY ./conf/entrypoint.development.sh /app/entrypoint.sh
+COPY ./conf/entrypoint.development.sh /usr/entrypoint.sh
 
 # copy project
 COPY . ${BASEDIR}
@@ -30,4 +30,4 @@ COPY . ${BASEDIR}
 # run entrypoint.sh
 #
 # NOTE: Neither 'ARG' nor 'ENV' will be recognized by ENTRYPOINT.
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/usr/entrypoint.sh" ]
