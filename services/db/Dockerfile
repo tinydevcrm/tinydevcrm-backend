@@ -8,5 +8,7 @@
 # TODO: Use a multistage Docker build in order to create an Alpine build for
 # 'pg_cron' from source without bloating the production image size:
 # https://docs.docker.com/develop/develop-images/multistage-build/
+#
+# TODO: Use a non-root user in order to run PostgreSQL.
 
 FROM postgres:12.0-alpine
