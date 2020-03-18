@@ -11,8 +11,10 @@ then
     echo "PostgreSQL started"
 fi
 
-python manage.py flush --no-input
-python manage.py migrate
-python manage.py collectstatic --no-input --clear
+export BASEDIR='/usr/src/app'
+
+python ${BASEDIR}/src/manage.py flush --no-input
+python ${BASEDIR}/src/manage.py migrate
+python ${BASEDIR}/src/manage.py collectstatic --no-input --clear
 
 exec "$@"

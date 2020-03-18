@@ -4,7 +4,9 @@
 FROM python:3.8.0-alpine
 
 # set work directory
-WORKDIR /usr/src/app
+ARG BASEDIR='/usr/src/app'
+
+WORKDIR ${BASEDIR}
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -16,14 +18,16 @@ RUN apk update && \
 
 # install dependencies
 RUN pip install --upgrade pip
-COPY ./conf/requirements.txt /usr/src/app/requirements.txt
+COPY ./conf/requirements.txt ${BASEDIR}/requirements.txt
 RUN pip install -r requirements.txt
 
 # copy entrypoint.sh
-COPY ./conf/entrypoint.development.sh /usr/src/app/entrypoint.sh
+COPY ./conf/entrypoint.development.sh /usr/entrypoint.sh
 
 # copy project
-COPY . /usr/src/app
+COPY . ${BASEDIR}
 
 # run entrypoint.sh
-ENTRYPOINT [ "/usr/src/app/entrypoint.sh" ]
+#
+# NOTE: Neither 'ARG' nor 'ENV' will be recognized by ENTRYPOINT.
+ENTRYPOINT [ "/usr/entrypoint.sh" ]
