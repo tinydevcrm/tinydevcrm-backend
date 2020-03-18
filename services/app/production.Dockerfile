@@ -26,10 +26,10 @@ RUN apk update && \
 RUN pip install --upgrade pip
 RUN pip install flake8
 COPY . /usr/src/app/
-RUN flake8 --ignore=E501,F401 .
+# RUN flake8 --ignore=E501,F401 .
 
 # install dependencies
-COPY ./requirements.txt .
+COPY ./conf/requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
 
@@ -71,8 +71,8 @@ COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
-# copy entrypoint-prod.sh
-COPY ./entrypoint.prod.sh $APP_HOME
+# copy entrypoint.production.sh
+COPY ./conf/entrypoint.production.sh $APP_HOME
 
 # copy project
 COPY . $APP_HOME
@@ -84,4 +84,4 @@ RUN chown -R app:app $APP_HOME
 USER app
 
 # run entrypoint.prod.sh
-ENTRYPOINT [ "/home/app/web/entrypoint.prod.sh" ]
+ENTRYPOINT [ "/home/app/web/entrypoint.production.sh" ]
