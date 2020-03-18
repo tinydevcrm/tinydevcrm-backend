@@ -30,8 +30,6 @@ ALLOWED_HOSTS = [
     # localhost
     '127.0.0.1',
     'localhost',
-    # AWS Elastic Beanstalk default CNAME
-    'tinydevcrm-api-dev2.eba-ga9m6we4.us-west-2.elasticbeanstalk.com'
 ]
 
 
@@ -53,9 +51,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 
     # Authentication service #
-    'src.authentication',
+    'authentication',
     # Concrete data service #
-    'src.concrete_data',
+    'concrete_data',
 ]
 
 MIDDLEWARE = [
@@ -72,7 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
-ROOT_URLCONF = 'src.core.urls'
+ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
@@ -90,7 +88,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'src.wsgi.application'
+WSGI_APPLICATION = 'wsgi.application'
 
 
 # Database

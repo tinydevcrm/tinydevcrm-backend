@@ -1,1 +1,4 @@
 .vscode/
+
+services/app/conf/.env.dev
+services/app/conf/.env.prod
