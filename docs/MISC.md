@@ -2,6 +2,10 @@ living document of stuff
 
 ## API reference
 
-## Token-based authentication
+Create a user with superuser privileges:
 
-## Snippets
+```bash
+
+```
+
+## Deployment snippets

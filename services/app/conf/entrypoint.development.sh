@@ -13,8 +13,8 @@ fi
 
 export BASEDIR='/usr/src/app'
 
-python ${BASEDIR}/src/manage.py flush --no-input
-python ${BASEDIR}/src/manage.py migrate
-python ${BASEDIR}/src/manage.py collectstatic --no-input --clear
+python ${BASEDIR}/manage.py flush --no-input
+python ${BASEDIR}/manage.py migrate
+python ${BASEDIR}/manage.py collectstatic --no-input --clear
 
 exec "$@"
