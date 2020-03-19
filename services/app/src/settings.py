@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # mapping instead.
 DEBUG = int(os.environ.get('DEBUG', default=0))
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split('')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split()
 
 
 # Application definition
@@ -99,9 +99,12 @@ DATABASES = {
             'SQL_ENGINE',
             'django.db.backends.sqlite3'
         ),
-        'NAME': os.path.join(
-            BASE_DIR,
-            'db.sqlite3'
+        'NAME': os.environ.get(
+            'SQL_DATABASE',
+            os.path.join(
+                BASE_DIR,
+                'db.sqlite3'
+            )
         ),
         'USER': os.environ.get(
             'SQL_USER',
