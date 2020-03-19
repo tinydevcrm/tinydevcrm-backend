@@ -74,4 +74,21 @@ Result:
 {"hello":"world"}
 ```
 
+Test that blacklisting a JWT token via API endpoint `/v1/auth/tokens/blacklist` works:
+
+```bash
+$ curl --header "Content-Type: application/json" -X POST http://127.0.0.1:8000/v1/auth/tokens/obtain/ --data '{"primary_email": "test@test.com", "password": "test"}'
+{"refresh":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU4NTg0NTQ3OSwianRpIjoiMGRiZDBiZjc2ZjliNGQxMTlkNzUyYjkxMGU4ODI0NDgiLCJ1c2VyX2lkIjoxfQ.DPhGBKUsVvCAGbLXLrEPp3DJM5vkZ1vho2psIuZCWs4","access":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNTg0NjM2MTc5LCJqdGkiOiI2OGU0YjAzMjE5ODc0OGVkYjAwMGJlMDcyYjVmNzhhNCIsInVzZXJfaWQiOjF9._xa4b1jnESwvInfkxVqE-XPtXvAIiFCr6ThoC8FPCLU"}(tinydevcrm-api) yingw787@yingw787-ThinkPad-P1-Gen-2:~/sr
+
+$ curl --header "Content-Type: application/json" -X POST http://127.0.0.1:8000/v1/auth/tokens/blacklist/ --data '{"refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU4NTg0NTQ3OSwianRpIjoiMGRiZDBiZjc2ZjliNGQxMTlkNzUyYjkxMGU4ODI0NDgiLCJ1c2VyX2lkIjoxfQ.DPhGBKUsVvCAGbLXLrEPp3DJM5vkZ1vho2psIuZCWs4"}'
+
+$ curl --header "Content-Type: application/json" -X POST http://127.0.0.1:8000/v1/auth/tokens/refresh/ --data '{"refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTU4NTg0NTQ3OSwianRpIjoiMGRiZDBiZjc2ZjliNGQxMTlkNzUyYjkxMGU4ODI0NDgiLCJ1c2VyX2lkIjoxfQ.DPhGBKUsVvCAGbLXLrEPp3DJM5vkZ1vho2psIuZCWs4"}'
+```
+
+Result:
+
+```bash
+{"detail":"Token is blacklisted","code":"token_not_valid"}
+```
+
 ## Deployment snippets
