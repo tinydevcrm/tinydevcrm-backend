@@ -29,8 +29,10 @@ COPY . /usr/src/app/
 # RUN flake8 --ignore=E501,F401 .
 
 # install dependencies
-COPY ./conf/requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+COPY ./app/conf/requirements.txt .
+# RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+RUN pip wheel --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
+
 
 
 #########
@@ -72,7 +74,7 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
 # copy entrypoint.production.sh
-COPY ./conf/entrypoint.production.sh $APP_HOME
+COPY ./app/conf/entrypoint.production.sh $APP_HOME
 
 # copy project
 COPY . $APP_HOME
