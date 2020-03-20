@@ -3,9 +3,9 @@ version: '3.7'
 services:
     web:
         build:
-            context: ./
-            dockerfile: ./app/production.Dockerfile
-        command: gunicorn app.src.wsgi:application --bind 0.0.0.0:8000
+            context: ./app
+            dockerfile: production.Dockerfile
+        command: gunicorn src.wsgi:application --bind 0.0.0.0:8000
         volumes:
             - static_volume:/home/app/web/staticfiles
             - media_volume:/home/app/web/mediafiles
