@@ -39,46 +39,6 @@ from django.urls import re_path
 # You may not be able to reverse all URLs in this namespace' arrives from this
 # code block.
 
-# TODO: Must namespace tuple URLs for development / production staging. Come
-# back to this later when I know more about how WSGI configs work.
-DEBUG = int(os.environ.get('DEBUG', default=0))
-
-
-AUTHENTICATION_URLS = [
-    'authentication.urls',
-    'authentication'
-]
-DEV_AUTHENTICATION_URLS = tuple(AUTHENTICATION_URLS)
-PROD_AUTHENTICATION_URLS = tuple([
-    'src.' + url
-    for url
-    in AUTHENTICATION_URLS
-])
-FINAL_AUTHENTICATION_URLS = (
-    DEV_AUTHENTICATION_URLS
-    if DEBUG
-    else
-    PROD_AUTHENTICATION_URLS
-)
-
-
-CONCRETE_DATA_URLS = [
-    'concrete_data.urls',
-    'concrete_data'
-]
-DEV_CONCRETE_DATA_URLS = tuple(CONCRETE_DATA_URLS)
-PROD_CONCRETE_DATA_URLS = tuple([
-    'src.' + url
-    for url
-    in CONCRETE_DATA_URLS
-])
-FINAL_CONCRETE_DATA_URLS = (
-    DEV_CONCRETE_DATA_URLS
-    if DEBUG
-    else
-    PROD_CONCRETE_DATA_URLS
-)
-
 
 urlpatterns = [
     path(
@@ -88,14 +48,20 @@ urlpatterns = [
     re_path(
         r'^v1/auth/',
         include(
-            FINAL_AUTHENTICATION_URLS,
+            (
+                'authentication.urls',
+                'authentication'
+            ),
         namespace='v1'
         )
     ),
     re_path(
         r'^v1/data/',
         include(
-            FINAL_CONCRETE_DATA_URLS,
+            (
+                'concrete_data.urls',
+                'concrete_data'
+            ),
         namespace='v1'
         )
     ),
