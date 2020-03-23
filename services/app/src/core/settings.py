@@ -168,12 +168,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.0/howto/static-files/
-
-STATIC_URL = '/static/'
-
-
 # Django REST Framework settings #
 REST_FRAMEWORK = {
     # Tuples must have commas to separate values, otherwise will resolve to
@@ -215,6 +209,8 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.0/howto/static-files/
 STATIC_URL = '/staticfiles/'
 STATIC_ROOT = os.path.join(
     BASE_DIR,
