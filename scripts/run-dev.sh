@@ -27,7 +27,7 @@ GIT_REPO_ROOT=$(git rev-parse --show-toplevel)
 
 $(which docker-compose) \
     -f $GIT_REPO_ROOT/services/docker-compose.development.yaml \
-    up --verbose -d --build
+    --verbose up -d --build
 
 xdg-open http://localhost:8000/admin
 
