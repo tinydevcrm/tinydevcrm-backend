@@ -27,4 +27,14 @@ GIT_REPO_ROOT=$(git rev-parse --show-toplevel)
 
 $(which docker-compose) \
     -f $GIT_REPO_ROOT/services/docker-compose.development.yaml \
-    up -d --build
+    up --verbose -d --build
+
+xdg-open http://localhost:8000/admin
+
+# That should be it. Here's some commands that could come in useful:
+
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
+# down -v` tears down the containers and the persistent volumes.
+
+# `docker logs {service_web_1|service_db_1}` prints out the docker logs for PID 1
+# to stdout.
