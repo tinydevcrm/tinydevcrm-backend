@@ -40,11 +40,8 @@ services:
             context: ./app
             dockerfile: production.Dockerfile
         command: gunicorn src.wsgi:application --bind 0.0.0.0:8000
-        volumes:
-            - static_volume:/home/app/web/staticfiles
-            - media_volume:/home/app/web/mediafiles
-        expose:
-            - 8000
+        ports:
+            - 8000:8000
         env_file:
             - ./app/conf/.env.prod
         depends_on:
@@ -57,19 +54,6 @@ services:
             - postgres_data:/var/lib/postgresql/data
         env_file:
             - ./app/conf/.env.prod.db
-    nginx:
-        build:
-            context: ./nginx
-            dockerfile: Dockerfile
-        volumes:
-            - static_volume:/home/app/web/staticfiles
-            - media_volume:/home/app/web/mediafiles
-        ports:
-            - 1337:80
-        depends_on:
-            - web
 
 volumes:
     postgres_data:
-    static_volume:
-    media_volume:
