@@ -47,9 +47,13 @@ xdg-open http://localhost:8000/admin
 # exec web python manage.py collectstatic --no-input --clear` collects static
 # files and places them into the Django context.
 
-# `docker-compose -f services/docker-compose.development.yaml exec db psql
-# --username=tinydevcrm --dbname=tinydevcrm_api_prod` enters into the `psql`
-# context for the PostgreSQL database.
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
+# exec db psql --username=tinydevcrm --dbname=tinydevcrm_api_prod` enters into
+# the `psql` context for the PostgreSQL database.
 
-# `docker-compose -f services/docker-compose.development.yaml exec web python
-# manage.py migrate --noinput` runs a Django migration.
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
+# exec web python manage.py migrate --noinput` runs a Django migration.
+
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yml exec
+# web python manage.py createsuperuser` creates a superuser from which to manage
+# the dashboard.
