@@ -75,7 +75,7 @@ RUN pip install --no-cache /wheels/*
 COPY ./conf/entrypoint.production.sh $APP_HOME
 
 # copy project
-COPY . $APP_HOME
+COPY ./src $APP_HOME
 
 # chown all the files to the app user
 RUN chown -R app:app $APP_HOME
