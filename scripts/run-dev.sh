@@ -36,5 +36,20 @@ xdg-open http://localhost:8000/admin
 # `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
 # down -v` tears down the containers and the persistent volumes.
 
-# `docker logs {service_web_1|service_db_1}` prints out the docker logs for PID 1
-# to stdout.
+# `docker logs {service_web_1|service_db_1}` prints out the docker logs for PID
+# 1 to stdout for the given container, as noted in `docker ps`.
+
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
+# exec $CONTAINER_ALIAS "$@"` executes a command '$@' within a container denoted
+# with alias $CONTAINER_ALIAS. For example:
+
+# `docker-compose -f $GIT_REPO_ROOT/services/docker-compose.development.yaml
+# exec web python manage.py collectstatic --no-input --clear` collects static
+# files and places them into the Django context.
+
+# `docker-compose -f services/docker-compose.development.yaml exec db psql
+# --username=tinydevcrm --dbname=tinydevcrm_api_prod` enters into the `psql`
+# context for the PostgreSQL database.
+
+# `docker-compose -f services/docker-compose.development.yaml exec web python
+# manage.py migrate --noinput` runs a Django migration.
