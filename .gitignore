@@ -2,3 +2,6 @@
 
 services/app/conf/.env.dev
 services/app/conf/.env.prod
+
+# Static files to be served from development and production environments.
+services/app/src/staticfiles/
