@@ -33,24 +33,6 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split()
 
 
 # Application definition
-
-# NOTE: Namespacing Django applications is extremely important when it comes to
-# standing up different environments. Because of the nested nature of this
-# repository and the need to separate concerns, WSGI and `manage.py` have
-# different reference paths. Without these ternaries, deployment will fail!
-authentication = (
-    'authentication'
-    if DEBUG
-    else
-    'src.authentication'
-)
-concrete_data = (
-    'concrete_data'
-    if DEBUG
-    else
-    'src.concrete_data'
-)
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -67,9 +49,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 
     # Authentication service #
-    authentication,
+    'authentication',
     # Concrete data service #
-    concrete_data,
+    'concrete_data',
 ]
 
 MIDDLEWARE = [
@@ -86,12 +68,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
 
-ROOT_URLCONF = (
-    'core.urls'
-    if DEBUG
-    else
-    'src.core.urls'
-)
+ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
