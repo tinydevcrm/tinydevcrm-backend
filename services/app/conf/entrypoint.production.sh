@@ -11,4 +11,10 @@ then
     echo "PostgreSQL started"
 fi
 
+export BASEDIR='/home/app/web'
+
+python ${BASEDIR}/manage.py flush --no-input
+python ${BASEDIR}/manage.py migrate
+python ${BASEDIR}/manage.py collectstatic --no-input --clear
+
 exec "$@"
