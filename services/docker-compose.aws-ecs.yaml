@@ -1,4 +1,8 @@
-version: '3.7'
+# Docker Compose file for taking local/production to aws-ecs/production for
+# Amazon Web Services (AWS) Elastic Container Service (ECS).
+
+# AWS ECS only supports major versions of Docker Compose, not minor versions.
+version: '3.0'
 
 services:
     web:
