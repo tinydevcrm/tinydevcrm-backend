@@ -1,0 +1,6 @@
+[
+    {
+        "ParameterKey": "MyIAMUserPassword",
+        "ParameterValue": "SOME_PASSWORD"
+    }
+]

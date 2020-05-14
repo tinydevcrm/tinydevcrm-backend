@@ -1,0 +1,171 @@
+# This AWS CloudFormation stack definition deploys the IAM users, groups, roles,
+# and policies necessary for 2FA-enabled administrator access to AWS resources.
+#
+# NOTE: This YAML document is formatted using 'cfn-format':
+# https://github.com/awslabs/aws-cloudformation-template-formatter. There is no
+# version number available, but likely v1.1.0 according to:
+# https://snapcraft.io/cfn-format. This tool is necessary and a pure YAML
+# formatter cannot be used because of special CloudFormation syntax like !Ref or
+# !Sub. 'cfn-format' strips all comments from the template, which necessitates
+# copying and pasting these comments back in. This is a known issue:
+# https://github.com/awslabs/aws-cloudformation-template-formatter/issues/9. Use
+# 'cfn-format' and YAML comments sparingly.
+
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Identity and access management layer for TinyDevCRM
+
+Parameters:
+  MyIAMUserPassword:
+    Type: String
+    Description: Password for IAM user. Ensure that the password matches default AWS password policies.
+
+Resources:
+  AdminGroup:
+    Type: "AWS::IAM::Group"
+    DependsOn:
+      - AdminRole
+    Properties:
+      GroupName: tinydevcrm-administrators
+      Policies:
+        - PolicyName: AssumeAdminRole
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "sts:AssumeRole"
+                Resource: !GetAtt AdminRole.Arn
+
+  AdminRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      Description: Temporarily elevates IAM user to admin-level privileges, except to change IAM permissions
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+      MaxSessionDuration: 3600
+      RoleName: tinydevcrm-admin
+
+  RequireMFAPolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: Force IAM user to apply MFA before enabling resource control.
+      ManagedPolicyName: tinydevcrm-RequireMFAPolicy
+      # From: https://gist.github.com/mixja/15d2969efe806680c2a4b0059daaf697
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowAllUsersToListAccounts
+            Effect: Allow
+            Action:
+              - "iam:ListAccountAliases"
+              - "iam:GetAccountPasswordPolicy"
+              - "iam:ListUsers"
+              - "iam:GetAccountSummary"
+            Resource:
+              - "*"
+          - Sid: AllowIndividualUserToSeeTheirAccountInformationAndCreateAccessKey
+            Effect: Allow
+            Action:
+              - "iam:ChangePassword"
+              - "iam:CreateLoginProfile"
+              - "iam:DeleteLoginProfile"
+              - "iam:GetAccountPasswordPolicy"
+              - "iam:GetLoginProfile"
+              - "iam:UpdateLoginProfile"
+              - "iam:CreateAccessKey"
+              - "iam:ListAccessKeys"
+            Resource:
+              # Escape ${} using ${!}:
+              # https://stackoverflow.com/a/44460789/1497211
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}"
+          - Sid: AllowIndividualUserToListTheirMFA
+            Effect: Allow
+            Action:
+              - "iam:ListVirtualMFADevices"
+              - "iam:ListMFADevices"
+            Resource:
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:mfa/*"
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}"
+          - Sid: AllowIndividualUserToManageTheirMFA
+            Effect: Allow
+            Action:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:ResyncMFADevice"
+            Resource:
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:mfa/${!aws:username}"
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}"
+          - Sid: DenyEverythingExceptForBelowUnlessMFAd
+            Effect: Deny
+            NotAction:
+              - "iam:ListVirtualMFADevices"
+              - "iam:ListMFADevices"
+              - "iam:ListUsers"
+              - "iam:ListAccountAliases"
+              - "iam:CreateVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:ResyncMFADevice"
+              - "iam:ChangePassword"
+              - "iam:CreateLoginProfile"
+              - "iam:DeleteLoginProfile"
+              - "iam:GetAccountPasswordPolicy"
+              - "iam:GetAccountSummary"
+              - "iam:GetLoginProfile"
+              - "iam:UpdateLoginProfile"
+            Resource: "*"
+            Condition:
+              "Null":
+                "aws:MultiFactorAuthAge": "true"
+          - Sid: DenyIamAccessToOtherAccountsUnlessMFAd
+            Effect: Deny
+            Action:
+              - "iam:CreateVirtualMFADevice"
+              - "iam:DeactivateMFADevice"
+              - "iam:DeleteVirtualMFADevice"
+              - "iam:EnableMFADevice"
+              - "iam:ResyncMFADevice"
+              - "iam:ChangePassword"
+              - "iam:CreateLoginProfile"
+              - "iam:DeleteLoginProfile"
+              - "iam:GetAccountPasswordPolicy"
+              - "iam:GetLoginProfile"
+              - "iam:UpdateLoginProfile"
+              - "iam:CreateAccessKey"
+              - "iam:ListAccessKeys"
+            NotResource:
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:mfa/${!aws:username}"
+              - "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:user/${!aws:username}"
+            Condition:
+              "Null":
+                "aws:MultiFactorAuthAge": "true"
+
+  User:
+    Type: "AWS::IAM::User"
+    DependsOn:
+      - UserGroup
+      - AdminGroup
+    Properties:
+      Groups:
+        - Ref: UserGroup
+        - Ref: AdminGroup
+      LoginProfile:
+        Password: !Ref MyIAMUserPassword
+        PasswordResetRequired: false
+      UserName: tinydevcrm-user
+
+  UserGroup:
+    Type: "AWS::IAM::Group"
+    DependsOn:
+      - RequireMFAPolicy
+    Properties:
+      GroupName: tinydevcrm-users
+      ManagedPolicyArns:
+        - Ref: RequireMFAPolicy
