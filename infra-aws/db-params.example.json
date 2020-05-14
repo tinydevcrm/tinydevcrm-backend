@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey": "EC2KeyName",
+        "ParameterValue": "MyEC2KeyName"
+    },
+    {
+        "ParameterKey": "SSHLocation",
+        "ParameterValue": "0.0.0.0/0"
+    },
+    {
+        "ParameterKey": "EnvVarPostgresPassword",
+        "ParameterValue": "MyPostgresPassword"
+    }
+]
