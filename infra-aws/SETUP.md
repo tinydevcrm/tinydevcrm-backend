@@ -11,9 +11,9 @@ This document describes how to set up TinyDevCRM infrastructure on AWS.
     compute instance via `aws configure`, and that specific `$AWS_PROFILE` is
     exported to the current shell environment.
 
-2.  Copy over `iam-params.example.json` as `iam-params.json`, and configure all parameter
-    values. The IAM user password must pass the default AWS password policy. The
-    password can be changed after IAM user creation.
+2.  Copy over `iam-params.example.json` as `iam-params.json`, and configure all
+    parameter values. The IAM user password must pass the default AWS password
+    policy. The password can be changed after IAM user creation.
 
 3.  Run:.
 
@@ -157,4 +157,54 @@ pull Docker images from.
 
     ```bash
     make ecr-terminate
+    ```
+
+## `db.yaml`: Compute layer for the PostgreSQL database
+
+This creates a custom deployed database compute layer.
+
+1.  Copy over `db-params.example.json` as `db-params.json`, and configure all
+    parameter values.
+
+2.  Create the registry using `db.yaml`:
+
+    ```bash
+    make db-create
+    ```
+
+3.  To update, run:
+
+    ```bash
+    make db-deploy
+    ```
+
+4.  To delete, run:
+
+    ```bash
+    make db-terminate
+    ```
+
+## `app.yaml`: Compute layer for the Django API layer
+
+This creates a custom deployed Django compute layer for the API.
+
+1.  Copy over `app-params.example.json` as `app-params.json`, and configure all
+    parameter values.
+
+2.  Create the registry using `app.yaml`:
+
+    ```bash
+    make app-create
+    ```
+
+3.  To update, run:
+
+    ```bash
+    make app-deploy
+    ```
+
+4.  To delete, run:
+
+    ```bash
+    make app-terminate
     ```
