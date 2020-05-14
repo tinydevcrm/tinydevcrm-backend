@@ -4,11 +4,12 @@ services:
   release:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:latest
     build:
-      context: ./app
+      context: ${GIT_REPO_ROOT}/services/app
       dockerfile: aws.Dockerfile
     env_file:
-      # Change ./app/conf/.env.aws-sample to ./app/conf/.env.aws
-      ./app/conf/.env.aws
+      # Change ${GIT_REPO_ROOT}/services/app/conf/.env.aws-sample to
+      # ${GIT_REPO_ROOT}/services/app/conf/.env.aws
+      ${GIT_REPO_ROOT}/services/app/conf/.env.aws
   app:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:${APP_VERSION}
     extends:
@@ -43,17 +44,18 @@ services:
   db:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_DB_REPOSITORY_NAME}:${APP_VERSION}
     build:
-      context: ./db
+      context: ${GIT_REPO_ROOT}/services/db
       dockerfile: Dockerfile
     env_file:
-      # Change ./db/conf/.env.aws-sample to ./db/conf/.env.aws
-      ./db/conf/.env.aws
+      # Change ${GIT_REPO_ROOT}/services/db/conf/.env.aws-sample to
+      # ${GIT_REPO_ROOT}/services/db/conf/.env.aws
+      ${GIT_REPO_ROOT}/services/db/conf/.env.aws
     volumes:
       - postgres_data:/var/lib/postgresql/data
   nginx:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NGINX_REPOSITORY_NAME}:${APP_VERSION}
     build:
-      context: ./nginx
+      context: ${GIT_REPO_ROOT}/services/nginx
       dockerfile: aws.Dockerfile
     volumes:
       - static_volume:/public
