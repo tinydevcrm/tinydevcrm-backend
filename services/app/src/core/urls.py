@@ -20,6 +20,8 @@ https://www.django-rest-framework.org/api-guide/versioning/#namespaceversioning
 
 import os
 
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
@@ -38,6 +40,8 @@ from django.urls import re_path
 # Django system check warning '?: (urls.W005) URL namespace 'v1' isn't unique.
 # You may not be able to reverse all URLs in this namespace' arrives from this
 # code block.
+
+from . import Dummy
 
 
 urlpatterns = [
@@ -64,5 +68,11 @@ urlpatterns = [
             ),
         namespace='v1'
         )
+    ),
+    path(
+        # Matches the root route only.
+        '',
+        Dummy.HomePageView.as_view(),
+        name='rootdummy'
     ),
 ]

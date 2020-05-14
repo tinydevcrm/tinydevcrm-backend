@@ -1,0 +1,69 @@
+version: "2.4"
+
+services:
+  release:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:latest
+    build:
+      context: ./app
+      dockerfile: aws.Dockerfile
+    env_file:
+      # Change ./app/conf/.env.aws-sample to ./app/conf/.env.aws
+      ./app/conf/.env.aws
+  app:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:${APP_VERSION}
+    extends:
+      service: release
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/public
+      - media_volume:/tinydevcrm-files
+    command:
+      - uwsgi
+      - --http=0.0.0.0:8000
+      - --module=wsgi
+      - --master
+      - --check-static=/public
+      - --check-static=/tinydevcrm-files
+      - --die-on-term
+      - --processes=1
+      - --threads=1
+    expose:
+      - 8000
+  migrate:
+    extends:
+      service: release
+    depends_on:
+      - db
+    command:
+      - python3
+      - manage.py
+      - migrate
+      - --no-input
+  db:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_DB_REPOSITORY_NAME}:${APP_VERSION}
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    env_file:
+      # Change ./db/conf/.env.aws-sample to ./db/conf/.env.aws
+      ./db/conf/.env.aws
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  nginx:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NGINX_REPOSITORY_NAME}:${APP_VERSION}
+    build:
+      context: ./nginx
+      dockerfile: aws.Dockerfile
+    volumes:
+      - static_volume:/public
+      - media_volume:/tinydevcrm-files
+    depends_on:
+      - app
+    ports:
+      - 1337:80
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

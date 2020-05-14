@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # mapping instead.
 DEBUG = int(os.environ.get('DEBUG', default=0))
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS').split()
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split()
 
 
 # Application definition
@@ -211,8 +211,17 @@ CORS_ORIGIN_WHITELIST = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-STATIC_URL = '/staticfiles/'
-STATIC_ROOT = os.path.join(
-    BASE_DIR,
-    "staticfiles"
+STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get(
+    'STATIC_ROOT',
+    '/public/static'
+)
+
+
+# Media files (CSV data dumps, PostgreSQL stored procedures, etc.)
+# https://docs.djangoproject.com/en/3.0/topics/files/
+# https://learndjango.com/tutorials/django-file-and-image-uploads-tutorial
+MEDIA_ROOT = os.environ.get(
+    'MEDIA_ROOT',
+    '/tinydevcrm-files'
 )
