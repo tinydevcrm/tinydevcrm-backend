@@ -1,0 +1,71 @@
+version: "2.4"
+
+services:
+  release:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:latest
+    build:
+      context: ${GIT_REPO_ROOT}/services/app
+      dockerfile: aws.Dockerfile
+    env_file:
+      # Change ${GIT_REPO_ROOT}/services/app/conf/.env.aws-sample to
+      # ${GIT_REPO_ROOT}/services/app/conf/.env.aws
+      ${GIT_REPO_ROOT}/services/app/conf/.env.aws
+  app:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_APP_REPOSITORY_NAME}:${APP_VERSION}
+    extends:
+      service: release
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/public
+      - media_volume:/tinydevcrm-files
+    command:
+      - uwsgi
+      - --http=0.0.0.0:8000
+      - --module=wsgi
+      - --master
+      - --check-static=/public
+      - --check-static=/tinydevcrm-files
+      - --die-on-term
+      - --processes=1
+      - --threads=1
+    expose:
+      - 8000
+  migrate:
+    extends:
+      service: release
+    depends_on:
+      - db
+    command:
+      - python3
+      - manage.py
+      - migrate
+      - --no-input
+  db:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_DB_REPOSITORY_NAME}:${APP_VERSION}
+    build:
+      context: ${GIT_REPO_ROOT}/services/db
+      dockerfile: Dockerfile
+    env_file:
+      # Change ${GIT_REPO_ROOT}/services/db/conf/.env.aws-sample to
+      # ${GIT_REPO_ROOT}/services/db/conf/.env.aws
+      ${GIT_REPO_ROOT}/services/db/conf/.env.aws
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  nginx:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NGINX_REPOSITORY_NAME}:${APP_VERSION}
+    build:
+      context: ${GIT_REPO_ROOT}/services/nginx
+      dockerfile: aws.Dockerfile
+    volumes:
+      - static_volume:/public
+      - media_volume:/tinydevcrm-files
+    depends_on:
+      - app
+    ports:
+      - 1337:80
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
