@@ -451,3 +451,40 @@ ERROR: compose.cli.main.main: tag does not exist: 267131297086.dkr.ecr.us-east-1
 
 Ensure that the `docker build` process is run before every push. This should be
 templated out in the `Makefile`.
+
+### `docker` debugging
+
+#### Problem
+
+Sometimes, container processes fail, and the container stops running.
+
+#### Resolution
+
+To list Docker containers that are running:
+
+```bash
+docker ps
+```
+
+To examine the PostgreSQL `db` container's data, run:
+
+```bash
+$ docker-compose -f infra-local/docker-compose.development.yaml exec db psql --username=$YOUR_USERNAME --dbname=$YOUR_DATABASE_NAME
+```
+
+Use `\l` in order to list all databases, `\c` to select a particular database
+and drop into its context, and `\dt` to list all tables within a database. `\q`
+to quit `psql`.
+
+To check `docker logs` for a particular container, run:
+
+```bash
+docker logs $CONTAINER_NAME
+```
+
+Here are some commands in order to run commands for specific containers:
+
+```bash
+# Run a migration within the development `docker-compose` context
+docker-compose -f infra-local/docker-compose.development.yaml exec web python manage.py migrate --noinput
+```
