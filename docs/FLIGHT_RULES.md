@@ -17,7 +17,7 @@ what to do when things go wrong.
 
 -- Chris Hadfield, *An Astronaut's Guide to Life*.
 
-## 1. `psql` connections to AWS RDS instances time out
+## `psql` connections to AWS RDS instances time out
 
 ### Problem
 
@@ -156,7 +156,7 @@ group. To do this:
     I was able to successfully connect to the RDS instance in `psql` using this
     method.
 
-## 2. Use `pg_cron` with AWS RDS
+## Use `pg_cron` with AWS RDS
 
 ### Problem
 
@@ -190,7 +190,7 @@ This is the full list of RDS extensions supported by AWS RDS PostgreSQL:
 address_standardizer, address_standardizer_data_us, amcheck, aws_commons, aws_s3, bloom, btree_gin, btree_gist, citext, cube, dblink, dict_int, dict_xsyn, earthdistance, fuzzystrmatch, hll, hstore, hstore_plperl, intagg, intarray, ip4r, isn, jsonb_plperl, log_fdw, ltree, orafce, pageinspect, pgaudit, pgcrypto, pglogical, pgrouting, pgrowlocks, pgstattuple, pgtap, pg_buffercache, pg_freespacemap, pg_hint_plan, pg_prewarm, pg_repack, pg_similarity, pg_stat_statements, pg_transport, pg_trgm, pg_visibility, plcoffee, plls, plperl, plpgsql, plprofiler, pltcl, plv8, postgis, postgis_tiger_geocoder, postgis_topology, postgres_fdw, prefix, sslinfo, tablefunc, test_parser, tsm_system_rows, tsm_system_time, unaccent, uuid-ossp
 ```
 
-## 3. Delete a superuser from Django
+## Delete a superuser from Django
 
 ### Problem
 
@@ -252,7 +252,7 @@ AttributeError: module 'authentication' has no attribute 'CustomUser'
 ['__builtins__', '__cached__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__path__', '__spec__', 'admin', 'models'$
 ```
 
-## 4. JSON Web Token does not appear to be verified on https://jwt.io
+## JSON Web Token does not appear to be verified on https://jwt.io
 
 ### Problem
 
@@ -269,7 +269,7 @@ After entering in the secret key (which should only be done for development and
 never test or production environments), a blue check appears that says
 "Signature Verified".
 
-## 5. Debug a Django REST API call
+## Debug a Django REST API call
 
 ### Problem
 
@@ -330,7 +330,7 @@ Quit the server with CONTROL-C.
 ipdb>
 ```
 
-## 6. Debug an Elastic Beanstalk application deployment issue
+## Debug an Elastic Beanstalk application deployment issue
 
 ### Problem
 
@@ -374,3 +374,80 @@ This led to find [this Stack Overflow
 answer](https://stackoverflow.com/a/7887521/1497211) regarding issues around
 your Django app name vs. your core folder name. From this information, I changed
 `src/src` to `src/core`, and submitted a redeployment.
+
+### `make aws-login` fails with MFA token
+
+#### Problem
+
+This failure assumes an IAM user has been configured for the command line as per
+instructions in `SETUP.md` in `tinydevcrm-infra`.
+
+Sometimes, given a long enough session, the MFA token will become invalid, and
+ECR logins will fail as a result, instead of `awscli` requesting a new token:
+
+```bash
+$ make aws-login
+An error occurred (UnrecognizedClientException) when calling the GetAuthorizationToken operation: The sec
+urity token included in the request is invalid.
+make: *** [Makefile:28: aws-login] Error 255
+```
+
+#### Resolution
+
+Re-export `AWS_PROFILE`, and try again:
+
+```bash
+$ export AWS_PROFILE=tinydevcrm-user
+$ make aws-login
+$(aws ecr get-login --no-include-email)
+WARNING! Using --password via the CLI is insecure. Use --password-stdin.
+WARNING! Your password will be stored unencrypted in /home/yingw787/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+```
+
+### `make publish-app` fails with authentication error
+
+#### Problem
+
+When running `make publish-app` or otherwise pushing Docker images to AWS ECR,
+sometimes the process errors out:
+
+This is different from having `awscli` properly configured and having an MFA
+token for the AWS IAM user.
+
+```bash
+ERROR: compose.cli.main.main: denied: Your authorization token has expired. Reauthenticate and try again.
+```
+
+#### Resolution
+
+AWS ECR requires its own login.
+
+Re-run `make aws-login` and then re-try the push:
+
+```bash
+make aws-login
+make publish-app
+```
+
+This should be templated out in the `Makefile` using dependent targets.
+
+### `make publish-app` fails with tag not found error
+
+#### Problem
+
+Publishing `app`, `db`, and `nginx` Docker images requires the latest commit
+tag. If those tagged images don't exist on the local compute instance, then
+`docker push` will error out:
+
+```bash
+ERROR: compose.cli.main.main: tag does not exist: 267131297086.dkr.ecr.us-east-1.amazonaws.com/tinydevcrm-ecr/app:aafc2c5
+```
+
+#### Resolution
+
+Ensure that the `docker build` process is run before every push. This should be
+templated out in the `Makefile`.
