@@ -9,10 +9,10 @@ version:
 # NOTE: Don't run the web Docker container in detached mode, since `python -m
 # ipdb` will hook within `settings.py` and cause the container to fail to start.
 dev-up:
-	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-local/docker-compose.development.yaml --verbose up -d --build db
+	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose up -d --build db
 	@echo "Open http://localhost:8000 to see results."
-	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-local/docker-compose.development.yaml --verbose run --service-ports web
+	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run --service-ports web
 
 dev-down:
-	docker-compose -f ${GIT_REPO_ROOT}/infra-local/docker-compose.development.yaml down -v
+	docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml down -v
 	docker images -q -f dangling=true -f label=application=todobackend | xargs -I ARGS docker rmi -f --no-prune ARGS
