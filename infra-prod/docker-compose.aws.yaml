@@ -56,7 +56,7 @@ services:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NGINX_REPOSITORY_NAME}:${APP_VERSION}
     build:
       context: ${GIT_REPO_ROOT}/services/nginx
-      dockerfile: aws.Dockerfile
+      dockerfile: Dockerfile
     volumes:
       - static_volume:/public
       - media_volume:/tinydevcrm-files
