@@ -1,0 +1,581 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Compute layer definition for the TinyDevCRM application backend.
+
+Parameters:
+  ApplicationDockerImageTag:
+    Type: String
+    Default: latest
+    Description: Image tag for the Django application backend Docker image.
+
+  ApplicationECRRepositoryName:
+    Type: String
+    Default: tinydevcrm-ecr/app
+    Description: Elastic Container Registry repository name where Docker builds for the Django application backend go.
+
+  EC2DesiredCapacity:
+    Type: Number
+    Default: "1"
+    Description: Average number of EC2 instances to launch in the EC2 cluster.
+
+  EC2HostAMI:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
+    Description: ID for the ECS-optimized EC2 AMI, updated to Amazon Linux 2.
+
+  EC2InstanceType:
+    Type: String
+    Default: t2.medium
+    Description: Instance type of the EC2 instance acting as EC2 host.
+
+  EC2KeyName:
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the EC2 instances
+
+  EC2MaximumCapacity:
+    Type: Number
+    Default: "6"
+    Description: Maximum number of EC2 instances to launch in the EC2 cluster.
+
+  EC2MinimumCapacity:
+    Type: Number
+    Default: "1"
+    Description: Minimum number of EC2 instances to launch in the EC2 cluster.
+
+  PublicSubnetAReference:
+    Type: String
+    Default: tinydevcrm-ec2-networking-subnet-a
+    Description: "Reference to public subnet A as part of stack 'tinydevcrm-ec2-networking.yaml'."
+
+  PublicSubnetBReference:
+    Type: String
+    Default: tinydevcrm-ec2-networking-subnet-b
+    Description: "Reference to public subnet B as part of stack 'tinydevcrm-ec2-networking.yaml'."
+
+  SSHLocation:
+    Type: String
+    Default: "0.0.0.0/0"
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Description: " The IP address range that can be used to SSH to the EC2 instances"
+    MaxLength: "18"
+    MinLength: "9"
+
+  VPCCIDRReference:
+    Type: String
+    Default: tinydevcrm-ec2-networking-vpc-cidr
+    Description: "Reference to VPC CIDR block deployed as part of stack 'tinydevcrm-ec2-networking.yaml'."
+
+  VPCReference:
+    Type: String
+    Default: tinydevcrm-ec2-networking-vpc
+    Description: "Reference to VPC deployed as part of stack `tinydevcrm-ec2-networking.yaml`."
+
+Resources:
+  ApplicationCluster:
+    Type: "AWS::ECS::Cluster"
+    DependsOn:
+      - EC2AutoScalingGroup
+    Description: ECS cluster for deploying ECS task and service definitions.
+    Properties:
+      ClusterName: !Sub "${AWS::StackName}"
+
+  ApplicationFileStoreSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Security group for accessing AWS EFS resources that serve TinyDevCRM media files.
+      VpcId: !ImportValue
+        Ref: VPCReference
+
+  ApplicationFileStoreSecurityGroupIngressFromTCP:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      CidrIp: !ImportValue
+        Ref: VPCCIDRReference
+      Description: Enable AWS EFS access via port 2049.
+      FromPort: "2049"
+      GroupId: !Ref ApplicationFileStoreSecurityGroup
+      IpProtocol: tcp
+      ToPort: "2049"
+
+  ApplicationLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub "/${AWS::StackName}/ecs/tinydevcrm-app"
+      RetentionInDays: 7
+
+  ApplicationSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Sub "${AWS::StackName} Application Security Group"
+      SecurityGroupEgress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: -1
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: -1
+      VpcId: !ImportValue
+        Ref: VPCReference
+
+  ApplicationService:
+    Type: "AWS::ECS::Service"
+    DependsOn:
+      - EC2AutoScalingGroup
+      - PublicLoadBalancerListener
+    Properties:
+      Cluster: !Ref ApplicationCluster
+      DeploymentConfiguration:
+        MaximumPercent: 100
+        MinimumHealthyPercent: 0
+      DesiredCount: 1
+      HealthCheckGracePeriodSeconds: 60
+      LoadBalancers:
+        - ContainerName: tinydevcrm-app
+          ContainerPort: 8000
+          TargetGroupArn: !Ref ApplicationServiceTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - Ref: ApplicationSecurityGroup
+            - Ref: ApplicationFileStoreSecurityGroup
+          Subnets:
+            - "Fn::ImportValue": !Ref PublicSubnetAReference
+            - "Fn::ImportValue": !Ref PublicSubnetBReference
+      ServiceName: tinydevcrm-app-svc
+      TaskDefinition: !Ref ApplicationTaskDefinition
+
+  ApplicationServiceTargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Description: A dummy target group is used to set up the application load balncer to just drop network traffic initially, before any real service target groups have been added.
+    Properties:
+      Port: 8000
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      TargetType: ip
+      VpcId: !ImportValue
+        Ref: VPCReference
+
+  ApplicationTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        - Name: tinydevcrm-app
+          Command:
+            - uwsgi
+            - "--http=0.0.0.0:8000"
+            - "--module=wsgi"
+            - "--master"
+            - "--check-static=/public"
+            - "--check-static=/tinydevcrm-files"
+            - "--die-on-term"
+            - "--processes=1"
+            - "--threads=1"
+          Cpu: 245
+          Environment:
+            - Name: DEBUG
+              Value: "1"
+            - Name: SECRET_KEY
+              Value: change_me
+            - Name: DJANGO_ALLOWED_HOSTS
+              Value: "*"
+            - Name: SQL_ENGINE
+              Value: django.db.backends.sqlite3
+            - Name: SQL_DATABASE
+              Value: db.sqlite3
+            - Name: SQL_USER
+              Value: user
+            - Name: SQL_PASSWORD
+              Value: password
+            - Name: SQL_HOST
+              Value: localhost
+            - Name: SQL_PORT
+              Value: 5432
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ApplicationECRRepositoryName}:${ApplicationDockerImageTag}"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub "/${AWS::StackName}/ecs/tinydevcrm-app"
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: docker
+          MemoryReservation: 395
+          MountPoints:
+            - ContainerPath: /public
+              SourceVolume: public
+            - ContainerPath: /tinydevcrm-files
+              SourceVolume: tinydevcrm-app-efs
+          PortMappings:
+            - ContainerPort: 8000
+        - Name: collectstatic
+          Command:
+            - python3
+            - manage.py
+            - collectstatic
+            - "--no-input"
+          Cpu: 5
+          Environment:
+            - Name: DEBUG
+              Value: "1"
+            - Name: SECRET_KEY
+              Value: change_me
+            - Name: DJANGO_ALLOWED_HOSTS
+              Value: "*"
+            - Name: SQL_ENGINE
+              Value: django.db.backends.sqlite3
+            - Name: SQL_DATABASE
+              Value: db.sqlite3
+            - Name: SQL_USER
+              Value: user
+            - Name: SQL_PASSWORD
+              Value: password
+            - Name: SQL_HOST
+              Value: localhost
+            - Name: SQL_PORT
+              Value: 5432
+          Essential: false
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/tinydevcrm-ecr/app:${ApplicationDockerImageTag}"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub "/${AWS::StackName}/ecs/tinydevcrm-app"
+              awslogs-region: !Ref "AWS::Region"
+              awslogs-stream-prefix: docker
+          MemoryReservation: 5
+          MountPoints:
+            - ContainerPath: /public
+              SourceVolume: public
+      Family: tinydevcrm-app
+      NetworkMode: awsvpc
+      Volumes:
+        - Name: public
+          Host:
+            SourcePath: /data/public
+        - Name: tinydevcrm-app-efs
+          DockerVolumeConfiguration:
+            Autoprovision: false
+            Scope: shared
+            Driver: rexray/efs
+
+  EC2AutoScalingGroup:
+    Type: "AWS::AutoScaling::AutoScalingGroup"
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+    Description: This resource launches the actual EC2 instances that will register themselves as members of the EC2 cluster, and run the Docker containers. Creation policy specifies timeout after 5 minutes.
+    Properties:
+      DesiredCapacity: !Ref EC2DesiredCapacity
+      LaunchConfigurationName: !Ref EC2LaunchConfiguration
+      MaxSize: !Ref EC2MaximumCapacity
+      MinSize: !Ref EC2MinimumCapacity
+      Tags:
+        - Key: Name
+          PropagateAtLaunch: "true"
+          Value: tinydevcrm-app-compute
+      VPCZoneIdentifier:
+        - "Fn::ImportValue": !Ref PublicSubnetAReference
+        - "Fn::ImportValue": !Ref PublicSubnetBReference
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: !Ref EC2MaximumCapacity
+        MinInstancesInService: !Ref EC2MinimumCapacity
+        PauseTime: PT15M
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+        WaitOnResourceSignals: "true"
+
+  EC2AutoscalingRole:
+    Type: "AWS::IAM::Role"
+    Description: Role to define EC2 autoscaling. NOTE that the EC2 autoscaling group may fail to stabilize if this role is mis-defined.
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - application-autoscaling.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: service-autoscaling
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "application-autoscaling:*"
+                  - "cloudwatch:DescribeAlarms"
+                  - "cloudwatch:PutMetricAlarm"
+                  - "ecs:DescribeServices"
+                  - "ecs:UpdateService"
+                Resource: "*"
+
+  EC2HostSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Description: Security group for the EC2 hosts that will run the containers.
+    Properties:
+      GroupDescription: Access to EC2 hosts that run containers
+      VpcId: !ImportValue
+        Ref: VPCReference
+
+  EC2HostsRole:
+    Type: "AWS::IAM::Role"
+    Description: "Role for EC2 hosts as passed by resource 'EC2InstanceProfile'. Policy 'ecs-service' allows the ECS agent on the EC2 hosts to communicate with the ECS control plane, and download container images from AWS ECR to run with the host. Additional policies 'ec2-service' and 'efs-service' are added in order for the application to access AWS EFS."
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+        - "arn:aws:iam::aws:policy/AmazonElasticFileSystemFullAccess"
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecs:CreateCluster"
+                  - "ecs:DeregisterContainerInstance"
+                  - "ecs:DiscoverPollEndpoint"
+                  - "ecs:Poll"
+                  - "ecs:RegisterContainerInstance"
+                  - "ecs:StartTelemetrySession"
+                  - "ecs:Submit*"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:BatchGetImage"
+                  - "ecr:GetDownloadUrlForLayer"
+                Resource: "*"
+        - PolicyName: ec2-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:AttachVolume"
+                  - "ec2:CreateVolume"
+                  - "ec2:CreateSnapshot"
+                  - "ec2:CreateTags"
+                  - "ec2:DeleteVolume"
+                  - "ec2:DeleteSnapshot"
+                  - "ec2:DescribeAvailabilityZones"
+                  - "ec2:DescribeInstances"
+                  - "ec2:DescribeVolumes"
+                  - "ec2:DescribeVolumeAttribute"
+                  - "ec2:DescribeVolumeStatus"
+                  - "ec2:DescribeSnapshots"
+                  - "ec2:CopySnapshot"
+                  - "ec2:DescribeSnapshotAttribute"
+                  - "ec2:DetachVolume"
+                  - "ec2:ModifySnapshotAttribute"
+                  - "ec2:ModifyVolumeAttribute"
+                  - "ec2:DescribeTags"
+                Resource: "*"
+        - PolicyName: efs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "elasticfilesystem:CreateFileSystem"
+                  - "elasticfilesystem:CreateMountTarget"
+                  - "ec2:DescribeSubnets"
+                  - "ec2:DescribeNetworkInterfaces"
+                  - "ec2:CreateNetworkInterface"
+                  - "elasticfilesystem:CreateTags"
+                  - "elasticfilesystem:DeleteFileSystem"
+                  - "elasticfilesystem:DeleteMountTarget"
+                  - "ec2:DeleteNetworkInterface"
+                  - "elasticfilesystem:DescribeFileSystems"
+                  - "elasticfilesystem:DescribeMountTargets"
+                Resource: "*"
+
+  EC2InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: /
+      Roles:
+        - Ref: EC2HostsRole
+
+  EC2LaunchConfiguration:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Description: Launch configuration for EC2 instances acting as ECS hosts.
+    Metadata:
+      "AWS::CloudFormation::Init":
+        config:
+          commands:
+            "01_volume_public":
+              command: mkdir -p /data/public
+            "02_volume_public_permissions":
+              command: "chown -R 1000:1000 /data/public"
+            "03_add_instance_to_cluster":
+              command: !Sub "echo ECS_CLUSTER=${AWS::StackName} >> /etc/ecs/ecs.config"
+            "04_start_ecs":
+              command: start ecs
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+              group: root
+              mode: 256
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.EC2LaunchConfiguration.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource EC2LaunchConfiguration
+          packages:
+            yum:
+              aws-cli: []
+              ecs-init: []
+              jq: []
+              nfs-utils: []
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: "true"
+                ensureRunning: "true"
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+    Properties:
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      ImageId: !Ref EC2HostAMI
+      InstanceType: !Ref EC2InstanceType
+      KeyName: !Ref EC2KeyName
+      SecurityGroups:
+        - Ref: ApplicationFileStoreSecurityGroup
+        - Ref: EC2HostSecurityGroup
+      UserData: !Base64
+        "Fn::Sub": |
+          #!/bin/bash -xe
+          yum install -y amazon-efs-utils
+          yum install -y nfs-utils
+          yum install -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2LaunchConfiguration --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2AutoScalingGroup --region ${AWS::Region}
+          # Open file descriptor for stderr
+          exec 2>>/var/log/ecs/ecs-agent-install.log
+          # Verify that the ECS agent is running
+          until curl -s http://localhost:51678/v1/metadata
+          do
+          sleep 1
+          done
+          # Install the Docker volume plugin to support EFS
+          docker plugin install rexray/efs REXRAY_PREEMPT=true EFS_REGION=${AWS::Region} EFS_SECURITYGROUPS=${ApplicationFileStoreSecurityGroup} --grant-all-permissions
+          # Restart the ECS agent
+          stop ecs
+          start ecs
+
+  EC2SecurityGroupIngressFromPublicALB:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      Description: Ingress rule to EC2 hosts from the public-facing application load balancer. IpProtocol of -1 allows all protocols / network traffic. SourceSecurityGroupId references the security group for the foreign resource.
+      GroupId: !Ref EC2HostSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref PublicLoadBalancerSecurityGroup
+
+  EC2SecurityGroupIngressFromSSH:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      CidrIp: !Ref SSHLocation
+      Description: Ingress rule to EC2 hosts to explicitly allow SSH from a specific SSH location.
+      FromPort: "22"
+      GroupId: !Ref EC2HostSecurityGroup
+      IpProtocol: tcp
+      ToPort: "22"
+
+  EC2SecurityGroupIngressFromSelf:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      Description: Ingress rule to EC2 hosts from other EC2 hosts within the same security group.
+      GroupId: !Ref EC2HostSecurityGroup
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref EC2HostSecurityGroup
+
+  ECSAgentRole:
+    Type: "AWS::IAM::Role"
+    Description: "IAM role to authorize ECS to manage resources on your account on your behalf. Policy 'ecs-service' allows ECS to attach network interfaces to EC2 instances to get 'awsvpc' working properly, and updates load balancers to send traffic to containers properly."
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ec2:AttachNetworkInterface"
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:CreateNetworkInterfacePermission"
+                  - "ec2:DeleteNetworkInterface"
+                  - "ec2:DeleteNetworkInterfacePermission"
+                  - "ec2:Describe*"
+                  - "ec2:DetachNetworkInterface"
+                  - "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
+                  - "elasticloadbalancing:DeregisterTargets"
+                  - "elasticloadbalancing:Describe*"
+                  - "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+                  - "elasticloadbalancing:RegisterTargets"
+                Resource: "*"
+
+  PublicLoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Description: Load balancer placed onto public subnets, so that network traffic from Internet can reach load balancer directly via the Internet gateway.
+    Properties:
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
+      Scheme: internet-facing
+      SecurityGroups:
+        - Ref: PublicLoadBalancerSecurityGroup
+      Subnets:
+        - "Fn::ImportValue": !Ref PublicSubnetAReference
+        - "Fn::ImportValue": !Ref PublicSubnetBReference
+
+  PublicLoadBalancerListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ApplicationServiceTargetGroup
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  PublicLoadBalancerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Security group for the public-facing load balancer. Allows access from anywhere on the Internet.
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: -1
+      VpcId: !ImportValue
+        Ref: VPCReference
+
+Outputs:
+  PublicLoadBalancerDNSName:
+    Description: The fully qualified DNS name of the network load balancer.
+    Value: !GetAtt PublicLoadBalancer.DNSName
