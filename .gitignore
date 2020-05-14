@@ -4,10 +4,13 @@
 # Configuration files.
 services/app/conf/.env.dev
 services/db/conf/.env.dev
-services/app/conf/.env.prod
-services/db/conf/.env.prod
 services/app/conf/.env.aws
 services/db/conf/.env.aws
 
 # Static files.
 services/app/src/staticfiles
+
+# Ops files.
+infra-aws/app-params.json
+infra-aws/iam-params.json
+infra-aws/db-params.json
