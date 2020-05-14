@@ -31,5 +31,5 @@ prod-down:
 
 # Change PGPASSWORD, --username, and --db values to match those in
 # db/conf/.env.aws
-local-psql:
+prod-psql:
 	PGPASSWORD=tinydevcrm docker-compose -f ${GIT_REPO_ROOT}/infra-prod/docker-compose.aws.yaml exec db psql --username=tinydevcrm --db=tinydevcrm_api_prod

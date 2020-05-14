@@ -62,3 +62,60 @@ make -f infra-local/Makefile dev-up
 -   API-first backend using Django REST Framework
 -   Local operations using Docker and `docker-compose`.
 -   Cloud-based operations using AWS
+
+### Running the development environment
+
+To start:
+
+```bash
+pushd infra-dev
+    make dev-up
+popd
+```
+
+To finish:
+
+```bash
+pushd infra-dev
+    make dev-down
+popd
+```
+
+### Running the production environment
+
+To start:
+
+```bash
+pushd infra-prod
+    make prod-up
+popd
+```
+
+To finish:
+
+```bash
+pushd infra-prod
+    make prod-down
+popd
+```
+
+To see the templated configuration file (important for building the correct
+Docker images to ship to ECR):
+
+```bash
+pushd infra-prod
+    make prod-config
+popd
+```
+
+To connect to `psql`:
+
+```bash
+pushd infra-prod
+    make prod-psql
+popd
+```
+
+### Creating the AWS stack
+
+Look at `infra-aws/SETUP.md` for more details.
