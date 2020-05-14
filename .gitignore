@@ -1,4 +1,13 @@
+# Development.
 .vscode/
 
+# Configuration files.
 services/app/conf/.env.dev
+services/db/conf/.env.dev
 services/app/conf/.env.prod
+services/db/conf/.env.prod
+services/app/conf/.env.aws
+services/db/conf/.env.aws
+
+# Static files.
+services/app/src/staticfiles
