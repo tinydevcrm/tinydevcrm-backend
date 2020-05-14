@@ -51,12 +51,12 @@
 ```bash
 git clone https://github.com/yingw787/tinydevcrm-backend
 cd tinydevcrm-backend
-make -f infra-local/Makefile run-dev
+make -f infra-local/Makefile dev-up
 ```
 
 ## Overview
 
-## Features
+### Features
 
 -   Token-based authentication using JSON Web Tokens
 -   API-first backend using Django REST Framework
