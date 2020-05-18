@@ -40,6 +40,15 @@ class FileUploadView(APIView):
         """
         Handles the HTTP POST request.
 
+        Example usage:
+
+        - curl \
+            --header "Content-Type: multipart/form-data \
+            --header "Authorization: JWT $JWT_ACCESS_TOKEN \
+            --method POST \
+            -F file=@sample.csv \
+            https://api.tinydevcrm.com/v1/data/upload/
+
         NOTE: These keys, such as 'data' and 'file', are very particular to the
         underlying models and serializers. Do not change without testing in
         development.
