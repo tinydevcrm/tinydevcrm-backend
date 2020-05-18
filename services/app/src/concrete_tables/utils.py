@@ -21,6 +21,7 @@ def create_table_data_is_valid(request_body):
 
     {
         "name": "some_table",
+        "dry_run": "0",
         "columns": [
             {
                 "name": "some_column",
@@ -38,6 +39,7 @@ def create_table_data_is_valid(request_body):
     NAME = 'name'
     COLUMNS = 'columns'
     TYPE = 'type'
+    DRY_RUN = 'dry_run'
 
     # TODO: Add check for PostgreSQL schema / table naming conventions.
     # TODO: Add check for PostgreSQL types using Enums.
@@ -51,7 +53,7 @@ def create_table_data_is_valid(request_body):
         'column_keys_match': True
     }
 
-    if sorted(request_body.keys()) != sorted([NAME, COLUMNS]):
+    if sorted(request_body.keys()) != sorted([NAME, COLUMNS, DRY_RUN]):
         checks['toplevel_keys_match'] = False
         # NOTE: Needs to exit early since validation logic may fail if key
         # 'column' does not exist.
