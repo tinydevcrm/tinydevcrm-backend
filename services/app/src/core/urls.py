@@ -69,6 +69,16 @@ urlpatterns = [
         namespace='v1'
         )
     ),
+    re_path(
+        r'^v1/tables/',
+        include(
+            (
+                'concrete_tables.urls',
+                'concrete_tables'
+            ),
+        namespace='v1'
+        )
+    ),
     path(
         # Matches the root route only.
         '',
