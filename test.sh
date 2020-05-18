@@ -17,9 +17,11 @@ echo "Access is: " $ACCESS
 # Test that things are working.
 curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/v1/data/test/
 
-# Create a PostgreSQL table.
+# Dry run create a PostgreSQL table (get the schema)
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"name": "some_table", "dry_run": "1", "columns": [{"name": "columnA", "type": "varchar(256)"}, {"name": "columnB", "type": "bytea"}]}' http://localhost:8000/v1/tables/create/
 
-curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"name": "some_table", "dry_run": "1", "columns": [{"name": "columnA", "type": "nvarchar(256)"}, {"name": "columnB", "type": "bytea"}]}' http://localhost:8000/v1/tables/create/
+# Create a PostgreSQL table.
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"name": "some_table", "dry_run": "0", "columns": [{"name": "columnA", "type": "varchar(256)"}, {"name": "columnB", "type": "bytea"}]}' http://localhost:8000/v1/tables/create/
 
 # # Upload a CSV file to remote.
 # curl --header "Content-Type: multipart/form-data" --header "Authorization: JWT $ACCESS" -X POST  -F file=@sample.csv http://localhost:8000/v1/data/upload/
