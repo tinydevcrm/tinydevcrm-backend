@@ -19,7 +19,7 @@ curl --header "Content-Type: application/json" --header "Authorization: JWT $ACC
 
 # Create a PostgreSQL table.
 
-curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"hello": "world"}' http://localhost:8000/v1/tables/create/
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"name": "some_table", "dry_run": "1", "columns": [{"name": "columnA", "type": "nvarchar(256)"}, {"name": "columnB", "type": "bytea"}]}' http://localhost:8000/v1/tables/create/
 
 # # Upload a CSV file to remote.
 # curl --header "Content-Type: multipart/form-data" --header "Authorization: JWT $ACCESS" -X POST  -F file=@sample.csv http://localhost:8000/v1/data/upload/
