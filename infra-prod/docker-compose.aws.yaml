@@ -31,6 +31,10 @@ services:
       - --threads=1
     expose:
       - 8000
+    networks:
+      prod_network:
+    links:
+      - db:db
   migrate:
     extends:
       service: release
@@ -41,6 +45,10 @@ services:
       - manage.py
       - migrate
       - --no-input
+    networks:
+      prod_network:
+    links:
+      - db:db
   db:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_DB_REPOSITORY_NAME}:${APP_VERSION}
     build:
@@ -52,6 +60,8 @@ services:
       ${GIT_REPO_ROOT}/services/db/conf/.env.aws
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      prod_network:
   nginx:
     image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AWS_ECR_NGINX_REPOSITORY_NAME}:${APP_VERSION}
     build:
@@ -64,8 +74,15 @@ services:
       - app
     ports:
       - 1337:80
+    networks:
+      prod_network:
+    links:
+      - app:app
 
 volumes:
   postgres_data:
   static_volume:
   media_volume:
+
+networks:
+  prod_network:
