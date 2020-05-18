@@ -18,6 +18,10 @@ services:
             - db
         stdin_open: true
         tty: true
+        networks:
+            dev_network:
+        links:
+            - db:db
     db:
         build:
             context: ${GIT_REPO_ROOT}/services/db
@@ -28,8 +32,13 @@ services:
             # Copy ${GIT_REPO_ROOT}/services/db/conf/.env.dev-example to
             # ${GIT_REPO_ROOT}/services/db/conf/.env.dev
             - ${GIT_REPO_ROOT}/services/db/conf/.env.dev
+        networks:
+            dev_network:
 
 volumes:
     # Persisting the data within the PostgreSQL instance to a Docker volume,
     # that binds to '/var/lib/postgresql/data/' directory in the container.
     postgres_data:
+
+networks:
+    dev_network:
