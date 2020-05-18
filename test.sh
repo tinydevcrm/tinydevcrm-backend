@@ -18,6 +18,8 @@ echo "Access is: " $ACCESS
 curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/v1/data/test/
 
 # Dry run create a PostgreSQL table (get the schema)
+#
+# NOTE: Dry run should be baked into form / confirmation:
 curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"name": "some_table", "dry_run": "1", "columns": [{"name": "columnA", "type": "varchar(256)"}, {"name": "columnB", "type": "bytea"}]}' http://localhost:8000/v1/tables/create/
 
 # Create a PostgreSQL table.
