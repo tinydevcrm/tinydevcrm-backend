@@ -16,3 +16,8 @@ dev-up:
 dev-down:
 	docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml down -v
 	docker images -q -f dangling=true -f label=application=todobackend | xargs -I ARGS docker rmi -f --no-prune ARGS
+
+# Change PGPASSWORD, --username, and --db values to match those in
+# db/conf/.env.dev
+dev-psql:
+	PGPASSWORD=tinydevcrm docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml exec db psql --username=tinydevcrm --db=tinydevcrm_api_dev
