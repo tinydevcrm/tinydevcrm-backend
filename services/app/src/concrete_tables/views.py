@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core import utils as core_utils
+
 from . import utils
 
 
@@ -59,12 +61,26 @@ class CreateTableView(APIView):
                 status=status.HTTP_200_OK
             )
         else:
-            # TODO: Refactor this section of code, esp. w.r.t. connection
-            # lifecycle.
-            # TODO: Create table.
-            return Response(
-                status=status.HTTP_201_CREATED
-            )
+            # NOTE: Wrap connection in try/except/finally block in order to
+            # responsibly handle possible errors in executing SQL query.
+            try:
+                psql_conn = core_utils.create_fresh_psql_connection()
+                psql_cursor = psql_conn.cursor()
+                psql_cursor.execute(
+                    sql.SQL(sql_query)
+                )
+                psql_conn.commit()
+                return Response(
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                return Response(
+                    str(e),
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            finally:
+                psql_cursor.close()
+                psql_conn.close()
 
 
 class ShowTableView(APIView):
