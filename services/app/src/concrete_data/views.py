@@ -43,8 +43,8 @@ class FileUploadView(APIView):
         Example usage:
 
         - curl \
-            --header "Content-Type: multipart/form-data \
-            --header "Authorization: JWT $JWT_ACCESS_TOKEN \
+            --header "Content-Type: multipart/form-data" \
+            --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
             --method POST \
             -F file=@sample.csv \
             https://api.tinydevcrm.com/v1/data/upload/
