@@ -17,5 +17,10 @@ urlpatterns = [
         'show/',
         views.ShowTableView().as_view(),
         name='table_show'
+    ),
+    path(
+        'import/',
+        views.ImportDataIntoTableView().as_view(),
+        name='table_import'
     )
 ]
