@@ -10,23 +10,6 @@ from rest_framework.views import APIView
 from . import serializers
 
 
-class TestProtectedView(APIView):
-    """
-    Test that other Django apps apart from 'authentication' remain protected via
-    token-based authentication through pinging API endpoints.
-    """
-    def get(self, request):
-        """
-        Sample HTTP GET request.
-        """
-        return Response(
-            data={
-                "hello": "world"
-            },
-            status=status.HTTP_200_OK
-        )
-
-
 class FileUploadView(APIView):
     """
     Upload files via API.
