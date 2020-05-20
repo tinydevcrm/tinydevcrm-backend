@@ -14,9 +14,6 @@ ACCESS=$(echo $RESPONSE | jq -r ".access")
 echo "Refresh is: " $REFRESH
 echo "Access is: " $ACCESS
 
-# Test that things are working.
-curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/v1/data/test/
-
 # Dry run create a PostgreSQL table (get the schema)
 #
 # NOTE: Dry run should be baked into form / confirmation:
