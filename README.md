@@ -63,6 +63,8 @@ make -f infra-local/Makefile dev-up
 -   Local operations using Docker and `docker-compose`.
 -   Cloud-based operations using AWS
 
+## Commands
+
 ### Running the development environment
 
 To start:
@@ -119,3 +121,15 @@ popd
 ### Creating the AWS stack
 
 Look at `infra-aws/SETUP.md` for more details.
+
+## Changelog
+
+See [CHANGELOG](docs/CHANGELOG.md) for additional details.
+
+## Roadmap
+
+See [ROADMAP](docs/ROADMAP.md) for additional details.
+
+## License
+
+See [LICENSE](LICENSE) for additional details.
