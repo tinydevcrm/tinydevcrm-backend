@@ -8,6 +8,7 @@ services:
     command: python -m ipdb manage.py runserver 0.0.0.0:8000
     volumes:
       - ${GIT_REPO_ROOT}/services/app/src/:/usr/src/app/
+      - media_volume:/tinydevcrm-files
     ports:
       - 8000:8000
     env_file:
@@ -22,12 +23,24 @@ services:
       dev_network:
     links:
       - db:db
+  db-builder:
+    build:
+      context: ${GIT_REPO_ROOT}/services/db
+      dockerfile: Dockerfile
+      target: libarrow-builder
+    deploy:
+      resources:
+        limits:
+          cpus: ${NUM_PHYSICAL_CPUS}
+          memory: ${PHYSICAL_MEMORY_KILOBYTES}
   db:
     build:
       context: ${GIT_REPO_ROOT}/services/db
       dockerfile: Dockerfile
+      target: release
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - media_volume:/tinydevcrm-files
     env_file:
       # Copy ${GIT_REPO_ROOT}/services/db/conf/.env.dev-example to
       # ${GIT_REPO_ROOT}/services/db/conf/.env.dev
@@ -39,6 +52,7 @@ volumes:
   # Persisting the data within the PostgreSQL instance to a Docker volume,
   # that binds to '/var/lib/postgresql/data/' directory in the container.
   postgres_data:
+  media_volume:
 
 networks:
   dev_network:
