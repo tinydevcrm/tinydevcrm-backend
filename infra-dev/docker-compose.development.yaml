@@ -27,7 +27,7 @@ services:
     build:
       context: ${GIT_REPO_ROOT}/services/db
       dockerfile: Dockerfile
-      target: libarrow-builder
+      target: libarrow-parquetfdw-builder
     deploy:
       resources:
         limits:
