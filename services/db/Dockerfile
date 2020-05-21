@@ -94,6 +94,8 @@ WORKDIR /parquet_fdw/parquet_fdw
 RUN make
 RUN make install
 
+# CMD [ "tail", "-f", "/dev/null" ]
+
 FROM postgres:12.0-alpine AS release
 LABEL application="tinydevcrm-db"
 
@@ -102,9 +104,16 @@ LABEL application="tinydevcrm-db"
 RUN mkdir -p '/usr/local/lib/postgresql'
 RUN mkdir -p '/usr/local/share/postgresql/extension'
 
+RUN apk add wget
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+RUN wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk
+RUN apk add glibc-2.31-r0.apk
+
 # TODO: Might want to change `chown` and not run `postgres` as the default user
 # for security purposes.
 WORKDIR /home
+
+########## `pg_cron` ##########
 
 COPY --from=pgcron-builder /home/pg_cron/pg_cron.so /home/pg_cron.so
 COPY --from=pgcron-builder /home/pg_cron/pg_cron.control /home/pg_cron.control
@@ -118,6 +127,10 @@ RUN /usr/bin/install -c -m 644 /home/pg_cron--1.1--1.2.sql '/usr/local/share/pos
 RUN /usr/bin/install -c -m 644 /home/pg_cron--1.0--1.1.sql '/usr/local/share/postgresql/extension/'
 RUN /usr/bin/install -c -m 644 /home/pg_cron--1.0.sql '/usr/local/share/postgresql/extension/'
 
+########## `parquet_fdw` ##########
+
+COPY --from=libarrow-parquetfdw-builder /usr/local/ /usr/local
+COPY --from=libarrow-parquetfdw-builder /usr/lib /usr/lib
 
 COPY --from=libarrow-parquetfdw-builder /parquet_fdw/parquet_fdw/parquet_fdw.so /home/parquet_fdw.so
 COPY --from=libarrow-parquetfdw-builder /parquet_fdw/parquet_fdw/parquet_fdw.control /home/parquet_fdw.control
