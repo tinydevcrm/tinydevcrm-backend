@@ -23,3 +23,10 @@ echo "cron.database_name = '${POSTGRES_DB}'" >> /var/lib/postgresql/data/postgre
 PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB <<- EOSQL
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 EOSQL
+
+# Create the 'parquet_fdw' PostgreSQL extension, and set it up.
+PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB <<- EOSQL
+CREATE EXTENSION IF NOT EXISTS parquet_fdw;
+CREATE SERVER parquet_srv FOREIGN DATA WRAPPER parquet_fdw;
+CREATE USER MAPPING FOR $PGUSER SERVER parquet_srv OPTIONS (user '$PGUSER');
+EOSQL

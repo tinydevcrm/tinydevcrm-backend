@@ -65,7 +65,7 @@ RUN apt-get -y install libparquet-glib-dev
 RUN apt-get install -y git
 RUN apt-get install -y postgresql-server-dev-12
 
-RUN git clone https://github.com/adjust/parquet_fdw.git /home/parquet_fdw
+RUN git clone https://github.com/tinydevcrm/parquet_fdw.git /home/parquet_fdw
 # Set work directory.
 WORKDIR /home/parquet_fdw
 RUN git checkout 0cc795d2811891056842ac82f97da35998cc3ec4
