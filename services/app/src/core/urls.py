@@ -60,27 +60,18 @@ urlpatterns = [
         )
     ),
     re_path(
-        r'^v1/data/',
-        include(
-            (
-                'concrete_data.urls',
-                'concrete_data'
-            ),
-        namespace='v1'
-        )
-    ),
-    re_path(
         r'^v1/tables/',
         include(
             (
-                'concrete_tables.urls',
-                'concrete_tables'
+                'tables.urls',
+                'tables'
             ),
         namespace='v1'
         )
     ),
     path(
         # Matches the root route only.
+        # TODO: Replace with API documentation index.html root.
         '',
         Dummy.HomePageView.as_view(),
         name='rootdummy'

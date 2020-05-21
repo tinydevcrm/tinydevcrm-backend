@@ -50,8 +50,8 @@ INSTALLED_APPS = [
 
     # Authentication service #
     'authentication',
-    # Concrete data service #
-    'concrete_data',
+    # Tables service #
+    'tables',
 ]
 
 MIDDLEWARE = [
