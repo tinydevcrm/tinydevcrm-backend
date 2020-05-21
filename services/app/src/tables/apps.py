@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ConcreteTablesConfig(AppConfig):
+class TablesConfig(AppConfig):
     name = 'tables'

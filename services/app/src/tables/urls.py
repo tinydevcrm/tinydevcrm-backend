@@ -1,5 +1,5 @@
 """
-Concrete table service API endpoint configuration.
+Tables service API endpoint configuration.
 """
 
 # TODO: Implement /show for showing a table.

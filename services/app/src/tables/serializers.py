@@ -1,7 +1,6 @@
 """
-Serializers for managing data file uploads.
+Tables service serializers.
 See: https://www.django-rest-framework.org/tutorial/1-serialization/
-See:
 """
 
 from rest_framework import serializers

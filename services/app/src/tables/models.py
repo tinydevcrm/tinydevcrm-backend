@@ -1,9 +1,6 @@
-from django.db import models
-
-# Create your models here.
-
-# TODO: Create association between user and table, if sharding data files by
-# user is relevant.
+"""
+Django models for tables service.
+"""
 
 import os
 
