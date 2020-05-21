@@ -17,7 +17,7 @@ echo "cron.database_name = '${POSTGRES_DB}'" >> /var/lib/postgresql/data/postgre
 # Need to restart the database in order to reload the updated configuration
 # file. This does not terminate the Docker container or cause an infinite loop.
 # No timeout needs to be specified, this script should be synchronous.
-/usr/local/bin/pg_ctl restart -D /var/lib/postgresql/data
+/usr/lib/postgresql/12/bin/pg_ctl restart -D /var/lib/postgresql/data
 
 # Create the 'pg_cron' PostgreSQL extension.
 PGPASSWORD=$POSTGRES_PASSWORD psql -U $POSTGRES_USER -d $POSTGRES_DB <<- EOSQL
