@@ -1,5 +1,5 @@
 """
-Concrete table service custom views.
+Table service custom views.
 """
 
 import os
@@ -115,7 +115,7 @@ class ImportDataIntoTableView(APIView):
         #
         # TODO: Remove hardcoded nature of 'file'
         file_path = os.path.join(
-            models.CONCRETE_TABLE_ROOT,
+            models.TABLE_ROOT,
             file_name
         )
 

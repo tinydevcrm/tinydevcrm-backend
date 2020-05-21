@@ -11,10 +11,10 @@ from django.conf import settings
 from django.db import models
 
 
-CONCRETE_TABLE_URL = 'concrete-tables'
-CONCRETE_TABLE_ROOT = os.path.join(
+TABLE_URL = 'tables'
+TABLE_ROOT = os.path.join(
     settings.MEDIA_ROOT,
-    CONCRETE_TABLE_URL
+    TABLE_URL
 )
 
 
@@ -24,7 +24,7 @@ class DataFile(models.Model):
     """
     file_id = models.AutoField(primary_key=True)
     file = models.FileField(
-        upload_to=CONCRETE_TABLE_URL,
+        upload_to=TABLE_URL,
         blank=False,
         null=False
     )
