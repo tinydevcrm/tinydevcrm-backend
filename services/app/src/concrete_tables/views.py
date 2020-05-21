@@ -2,12 +2,15 @@
 Concrete table service custom views.
 """
 
+import os
+
 import psycopg2
 from psycopg2 import sql
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from . import models
 from core import utils as core_utils
 
 from . import utils
@@ -93,3 +96,111 @@ class ShowTableView(APIView):
         """
         # TODO: Implement.
         pass
+
+
+class ImportDataIntoTableView(APIView):
+    """
+    Handles 'COPY INTO' views via API.
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        Handles the HTTP POST request.
+        """
+        file_name = request.data['file']
+        table_name = request.data['table']
+
+        # TODO: Change this route by updating the path where the file is
+        # retrieved from based on the underlying user, which involves a user
+        # model change and migration.
+        #
+        # TODO: Remove hardcoded nature of 'file'
+        file_path = os.path.join(
+            models.CONCRETE_TABLE_ROOT,
+            file_name
+        )
+
+        if not utils.import_data_into_table_request_is_valid(
+            file_path,
+            table_name
+        ):
+            return Response(
+                # TODO: Add better error message on validation details.
+                # TODO: Move validation logic from utility method to internal
+                # method, since it's only relevant for a specific API endpoint.
+                'Invalid request',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        utils.copy_data_into_table(
+            file_path,
+            table_name
+        )
+
+        return Response(
+            'Table is populated with data.',
+            status=status.HTTP_200_OK
+        )
+
+
+"""
+Concrete data service custom views.
+"""
+
+from rest_framework import status
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from . import serializers
+
+
+class FileUploadView(APIView):
+    """
+    Upload files via API.
+    """
+    parser_classes = (
+        MultiPartParser,
+        FormParser,
+    )
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handles the HTTP POST request.
+
+        Example usage:
+
+        - curl \
+            --header "Content-Type: multipart/form-data" \
+            --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
+            --method POST \
+            -F file=@sample.csv \
+            https://api.tinydevcrm.com/v1/data/upload/
+
+        NOTE: These keys, such as 'data' and 'file', are very particular to the
+        underlying models and serializers. Do not change without testing in
+        development.
+        """
+
+        file_serializer = serializers.FileSerializer(
+            # Use the form key 'file=' in order to send binary files as part of
+            # a multipart/form-data request.
+            #
+            # Example: curl --header "Content-Type: multipart/form-data"
+            # --header "Authorization: JWT $JWT_ACCESS_TOKEN" -X POST  -F
+            # 'file=@"/path/to/sample.csv"'
+            # http://localhost:8000/v1/data/upload/
+            data={
+                'file': request.data['file']
+            }
+        )
+        if file_serializer.is_valid():
+            file_serializer.save()
+            return Response(
+                file_serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            return Response(
+                file_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
