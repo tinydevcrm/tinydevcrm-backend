@@ -71,6 +71,15 @@ urlpatterns = [
             )
         )
     ),
+    re_path(
+        r'^events/',
+        include(
+            (
+                'events.urls',
+                'events'
+            )
+        )
+    ),
     path(
         # Matches the root route only.
         # TODO: Replace with API documentation index.html root.
