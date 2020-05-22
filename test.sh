@@ -21,6 +21,7 @@ curl --header "Content-Type: multipart/form-data" --header "Authorization: JWT $
 curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "sql_query": "SELECT * FROM sample_table"}' http://localhost:8000/v1/views/create/
 
 # Create scheduled job.
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "crontab_def": "* * * * *"}' http://localhost:8000/v1/jobs/create/
 
 # Create materialized view refreshes table to store job scheduler events. Should
 # be done as part of a migration.
