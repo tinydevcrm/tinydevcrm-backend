@@ -93,6 +93,33 @@ class CreateJobView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        crontab_def = request.data.get('crontab_def')
+        view_name = request.data.get('view_name')
+
+        sql_statement = f"SELECT cron.schedule('{crontab_def}', 'REFRESH MATERIALIZED VIEW \"{view_name}\"')"
+
+        # TODO: Implement method to fetch from PostgreSQL table 'cron.job' and
+        # display cron jobs based on user
+        #
+        # TODO: Implement method to insert into materialized view refresh events
+        # table.
+
+        try:
+            psql_conn = core_utils.create_fresh_psql_connection()
+            psql_cursor = psql_conn.cursor()
+            psql_cursor.execute(
+                sql.SQL(sql_statement)
+            )
+            psql_conn.commit()
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        finally:
+            psql_cursor.close()
+            psql_conn.close()
+
         return Response(
             'Successfully created cron job',
             status=status.HTTP_201_CREATED
