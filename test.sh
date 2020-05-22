@@ -18,6 +18,7 @@ echo "Access is: " $ACCESS
 curl --header "Content-Type: multipart/form-data" --header "Authorization: JWT $ACCESS" -X POST  -F file=@sample.parquet -F table_name=sample_table -F columns='[{"column_name": "SomeNumber", "column_type":"int"},{"column_name":"SomeString","column_type":"varchar(256)"}]' http://localhost:8000/v1/tables/create/
 
 # Create materialized view.
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "sql_query": "SELECT * FROM sample_table"}' http://localhost:8000/v1/views/create/
 
 # Create scheduled job.
 
