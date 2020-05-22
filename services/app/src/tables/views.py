@@ -38,7 +38,7 @@ class CreateTableView(APIView):
             -F file=@sample.parquet \
             -F table_name=sample_table \
             -F columns='[{"column_name": "SomeNumber", "column_type":"int"},{"column_name":"SomeString","column_type":"varchar(256)"}]' \
-            https://api.tinydevcrm.com/v1/tables/create/
+            https://api.tinydevcrm.com/tables/create/
 
         NOTE: These keys, such as 'data' and 'file', are very particular to the
         underlying models and serializers. Do not change without testing in
@@ -90,13 +90,8 @@ class CreateTableView(APIView):
             )
 
         file_serializer = serializers.DataFileSerializer(
-            # Use the form key 'file=' in order to send binary files as part of
-            # a multipart/form-data request.
-            #
-            # Example: curl --header "Content-Type: multipart/form-data"
-            # --header "Authorization: JWT $JWT_ACCESS_TOKEN" -X POST  -F
-            # 'file=@"/path/to/sample.csv"'
-            # http://localhost:8000/v1/data/upload/
+            # Use the form key 'file=@$FILENAME' in order to send binary files
+            # as part of a multipart/form-data request.
             data={
                 'file': request.data['file']
             }

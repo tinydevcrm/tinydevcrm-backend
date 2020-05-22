@@ -50,43 +50,39 @@ urlpatterns = [
         admin.site.urls
     ),
     re_path(
-        r'^v1/auth/',
+        r'^auth/',
         include(
             (
                 'authentication.urls',
                 'authentication'
-            ),
-        namespace='v1'
+            )
         )
     ),
     re_path(
-        r'^v1/tables/',
+        r'^tables/',
         include(
             (
                 'tables.urls',
                 'tables'
-            ),
-        namespace='v1'
+            )
         )
     ),
     re_path(
-        r'^v1/views/',
+        r'^views/',
         include(
             (
                 'views.urls',
                 'views'
-            ),
-        namespace='v1'
+            )
         )
     ),
     re_path(
-        r'^v1/jobs/',
+        r'^jobs/',
         include(
             (
                 'jobs.urls',
                 'jobs'
-            ),
-        namespace='v1'
+            )
         )
     ),
     path(

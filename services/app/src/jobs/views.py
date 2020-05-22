@@ -27,7 +27,7 @@ class CreateJobView(APIView):
             --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
             --method POST \
             --data '{"crontab_def", "* * * * *", "view_name": "sample_view"}' \
-            https://api.tinydevcrm.com/v1/jobs/create/
+            https://api.tinydevcrm.com/jobs/create/
         """
         def _validate(request):
             """

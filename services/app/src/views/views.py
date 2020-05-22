@@ -26,7 +26,7 @@ class CreateMaterializedViewAPIView(APIView):
             --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
             --method POST \
             --data '{"view_name": "sample_view", "sql_query": "SELECT * FROM sample_table"}' \
-            https://api.tinydevcrm.com/v1/views/create/
+            https://api.tinydevcrm.com/views/create/
         """
         def _validate(request):
             """
