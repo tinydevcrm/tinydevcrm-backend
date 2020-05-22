@@ -5,7 +5,6 @@ Table service custom views.
 import json
 import os
 
-import psycopg2
 from psycopg2 import sql
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -139,9 +138,6 @@ class CreateTableView(APIView):
                 sql.SQL(sql_query)
             )
             psql_conn.commit()
-            return Response(
-                status=status.HTTP_201_CREATED
-            )
         except Exception as e:
             return Response(
                 str(e),
