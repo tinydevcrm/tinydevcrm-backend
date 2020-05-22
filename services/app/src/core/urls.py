@@ -27,20 +27,6 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 
-
-# TODO: Review other methods of versioning APIs. Apparently, one other popular
-# method for API versioning includes adding an 'X-' HTTP header to denote API
-# versioning. This may reduce the amount of code that needs to be rewritten, at
-# the cost of code / codebase clarity. See this Stack Overflow answer:
-# https://stackoverflow.com/a/21839842/1497211, and this Stack Overflow answer:
-# https://stackoverflow.com/a/14380004/1497211, with reference to GitHub's V3
-# API: https://developer.github.com/v3/media/, and 'X-GitHub-Media-Type:
-# github.v3'.
-#
-# Django system check warning '?: (urls.W005) URL namespace 'v1' isn't unique.
-# You may not be able to reverse all URLs in this namespace' arrives from this
-# code block.
-
 from . import Dummy
 
 
