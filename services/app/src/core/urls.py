@@ -79,6 +79,16 @@ urlpatterns = [
         namespace='v1'
         )
     ),
+    re_path(
+        r'^v1/jobs/',
+        include(
+            (
+                'jobs.urls',
+                'jobs'
+            ),
+        namespace='v1'
+        )
+    ),
     path(
         # Matches the root route only.
         # TODO: Replace with API documentation index.html root.

@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'tables',
     # Views service #
     'views',
+    # Jobs service #
+    'jobs'
 ]
 
 MIDDLEWARE = [
