@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'authentication',
     # Tables service #
     'tables',
+    # Views service #
+    'views',
 ]
 
 MIDDLEWARE = [

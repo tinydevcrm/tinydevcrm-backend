@@ -1,3 +1,5 @@
-from django.db import models
+"""
+Django models for views service.
+"""
 
-# Create your models here.
+from django.db import models
