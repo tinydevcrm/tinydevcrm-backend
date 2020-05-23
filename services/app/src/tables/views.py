@@ -5,6 +5,7 @@ Table service custom views.
 import json
 import os
 
+from django.conf import settings
 from psycopg2 import sql
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -116,6 +117,30 @@ class CreateTableView(APIView):
                 checks
             )
 
+        # Create the PostgreSQL schema based on the Django user ID. Since the
+        # existence of tables undergirds everything else, including creation of
+        # materialized views and scheduled jobs, it should be safe to only
+        # include schema creation logic here.
+        SCHEMA_NAME = str(request.user.id)
+        # NOTE: For some reason, sql.Identifier(SCHEMA_NAME) does not work
+        # properly with integer values.
+        sql_statement = sql.SQL(
+            f'CREATE SCHEMA IF NOT EXISTS "{SCHEMA_NAME}"'
+        )
+        try:
+            psql_conn = core_utils.create_fresh_psql_connection()
+            psql_cursor = psql_conn.cursor()
+            psql_cursor.execute(sql_statement)
+            psql_conn.commit()
+        except Exception as e:
+            return Response(
+                str(e),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        finally:
+            psql_cursor.close()
+            psql_conn.close()
+
         (is_valid, validation_checks) = _validate(request)
         if not is_valid:
             return Response(
@@ -156,7 +181,16 @@ class CreateTableView(APIView):
             models.TABLE_ROOT,
             request.data.get('file').name
         )
-        sql_query = f'CREATE FOREIGN TABLE "{table_name}" {column_query} SERVER parquet_srv OPTIONS (filename \'{file_abspath}\');'
+        # TODO: Use sql.SQL here for column query.
+        create_foreign_table_sql_query = f'CREATE FOREIGN TABLE "temp" {column_query} SERVER parquet_srv OPTIONS (filename \'{file_abspath}\');'
+
+        copy_table_sql_query = sql.SQL(
+            f'CREATE TABLE "{SCHEMA_NAME}"."{table_name}" AS TABLE "temp" WITH DATA'
+        )
+
+        drop_temp_table_sql_query = sql.SQL(
+            'DROP FOREIGN TABLE "temp"'
+        )
 
         # NOTE: Wrap connection in try/except/finally block in order to
         # responsibly handle possible errors in executing SQL query.
@@ -164,8 +198,10 @@ class CreateTableView(APIView):
             psql_conn = core_utils.create_fresh_psql_connection()
             psql_cursor = psql_conn.cursor()
             psql_cursor.execute(
-                sql.SQL(sql_query)
+                sql.SQL(create_foreign_table_sql_query)
             )
+            psql_cursor.execute(copy_table_sql_query)
+            psql_cursor.execute(drop_temp_table_sql_query)
             psql_conn.commit()
         except Exception as e:
             return Response(
@@ -173,6 +209,16 @@ class CreateTableView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         finally:
+            # No matter what, delete the Parquet file in order to avoid building
+            # up cruft outside of /var/lib/postgresql/data.
+            datafile.delete()
+            # Deleting the data model does not delete the file. Do that
+            # separately.
+            os.remove(os.path.abspath(os.path.join(
+                settings.MEDIA_ROOT,
+                str(datafile.file)
+            )))
+
             psql_cursor.close()
             psql_conn.close()
 
