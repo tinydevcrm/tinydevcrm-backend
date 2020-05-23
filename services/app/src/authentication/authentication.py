@@ -9,6 +9,9 @@ REST_FRAMEWORK.DEFAULT_AUTHENTICATION_CLASSES.
 
 This file is necessary because a custom user model is defined, and hence
 request.user is not properly populated.
+
+TODO: When adding fine-grained permissioning tables to CustomUser, come back to
+this authentication pipeline to check resources.
 """
 
 
@@ -17,7 +20,8 @@ from rest_framework import HTTP_HEADER_ENCODING, authentication
 
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.state import User
+
+from .models import CustomUser
 
 AUTH_HEADER_TYPES = api_settings.AUTH_HEADER_TYPES
 
@@ -121,8 +125,8 @@ class JWTAuthentication(authentication.BaseAuthentication):
             raise InvalidToken(_('Token contained no recognizable user identification'))
 
         try:
-            user = User.objects.get(**{api_settings.USER_ID_FIELD: user_id})
-        except User.DoesNotExist:
+            user = CustomUser.objects.get(**{api_settings.USER_ID_FIELD: user_id})
+        except CustomUser.DoesNotExist:
             raise AuthenticationFailed(_('User not found'), code='user_not_found')
 
         if not user.is_active:
