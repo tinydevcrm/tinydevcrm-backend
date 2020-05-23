@@ -29,6 +29,40 @@ class CreateTableView(APIView):
         """
         Handles the HTTP POST request.
 
+        These tables are generated from data dumps backed by "concrete data",
+        Parquet files available via PostgreSQL extension 'parquet_fdw' (foreign
+        data wrapper) that serve as the foundational sources of truth for users.
+        This is opposed to "derived data", which is data computed via
+        mathematical, logical / relational, or other types of transformations.
+        For example, a materialized view would be considered "derived data",
+        while a CSV upload would be considered "concrete data".
+
+        Making this distinction guarantees unitary application data flow by
+        making sure each layer is immutable (writes are prohibited for foreign
+        tables and only occur during HTTP POST), and that consequently,
+        underlying data pipelines are acyclic and easier to manage. Since there
+        is only one version of the data, versioning and backup of foreign tables
+        is fairly trivial.
+
+        TODO: A prior version of this method used to create the foreign table
+        as-is. While this would work for creating materialized views and
+        triggers, the inability of writes to the underlying data, as well as the
+        difficulties managing the persist layer precludes this method as too
+        inflexible for OLTP workloads. If foreign tables are desired, create a
+        separate endpoint for supporting only foreign tables.
+
+        TODO: Take the complete possible PostgreSQL 'CREATE TABLE' syntax and
+        translate that through a form to get the full functionality of 'CREATE
+        TABLE' commands without suffering extraneous security issues of doing
+        so.
+
+        TODO: In addition, each PostgreSQL table is nested under a user schema
+        defined by the custom user, in order to deconflict data resources
+        underneath the hood, and to help facilitate schema-based multitenancy.
+        Create a PostgreSQL user during the 'CREATE SCHEMA IF NOT EXISTS' in
+        order to apply an authorization for the schema to that user, so that
+        `psql -h db.tinydevcrm.com -U $CUSTOM_USERNAME` can work properly.
+
         Example usage:
 
         - curl \
@@ -103,7 +137,7 @@ class CreateTableView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        file_serializer.save()
+        datafile = file_serializer.save()
 
         table_name = request.data.get('table_name')
         columns = json.loads(request.data.get('columns'))
