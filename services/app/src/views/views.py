@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 
 from core import utils as core_utils
 
+from . import serializers
+
 
 class CreateMaterializedViewAPIView(APIView):
     """
@@ -19,13 +21,17 @@ class CreateMaterializedViewAPIView(APIView):
         """
         Handles the HTTP POST request.
 
+        TODO: Parse the SQL statement and automatically insert the user ID as
+        PostgreSQL schema into the raw SQL statement so that the user doesn't
+        need to specify the user ID via the API.
+
         Example:
 
         - curl \
             --header "Content-Type: application/json" \
             --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
             --method POST \
-            --data '{"view_name": "sample_view", "sql_query": "SELECT * FROM sample_table"}' \
+            --data '{"view_name": "\"1\".\"sample_view\"", "sql_query": "SELECT * FROM \"1\".\"sample_table\""}' \
             https://api.tinydevcrm.com/views/create/
         """
         def _validate(request):
@@ -80,7 +86,7 @@ class CreateMaterializedViewAPIView(APIView):
         view_name = request.data.get('view_name')
         sql_query_request = request.data.get('sql_query')
 
-        sql_statement = f'CREATE MATERIALIZED VIEW "{view_name}" AS {sql_query_request} WITH DATA;'
+        sql_statement = f'CREATE MATERIALIZED VIEW {view_name} AS {sql_query_request} WITH DATA;'
 
         try:
             psql_conn = core_utils.create_fresh_psql_connection()
@@ -89,6 +95,15 @@ class CreateMaterializedViewAPIView(APIView):
                 sql.SQL(sql_statement)
             )
             psql_conn.commit()
+
+            view_serializer = serializers.MaterializedViewSerializer(
+                data={
+                    'view_name': view_name,
+                    'user': request.user.id
+                }
+            )
+            if view_serializer.is_valid():
+                view_serializer.save()
         except Exception as e:
             return Response(
                 str(e),
