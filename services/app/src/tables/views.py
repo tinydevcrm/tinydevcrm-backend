@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 
 from . import models
 from . import serializers
+from . import utils as table_utils
 from core import utils as core_utils
 
 
@@ -115,15 +116,10 @@ class CreateTableView(APIView):
             except (Exception, AssertionError) as e:
                 checks['column_schema_is_valid'] = False
 
-            table_name = request.data.get('table_name')
-            with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
-                psql_cursor.execute(
-                    sql.SQL('SELECT EXISTS(SELECT * FROM {})').format(
-                        sql.Identifier(table_name)
-                    )
-                )
-                table_exists = psql_cursor.fetchone()[0]
-                checks['table_does_not_exist'] = not table_exists
+            checks['table_does_not_exist'] = not table_utils.table_exists(
+                str(request.user.id),
+                request.data.get('table_name')
+            )
 
             return (
                 all(checks.values()),
