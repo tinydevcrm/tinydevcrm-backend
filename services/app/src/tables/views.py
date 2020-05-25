@@ -90,9 +90,11 @@ class CreateTableView(APIView):
             Returns:
                 bool: Request is valid.
             """
+            # TODO: Add check for 'column_types_are_valid'.
             checks = {
                 'all_required_keys_are_present': True,
-                'column_schema_is_valid': True
+                'column_schema_is_valid': True,
+                'table_does_not_exist': True
             }
 
             if (
@@ -112,6 +114,16 @@ class CreateTableView(APIView):
                     # TODO: Add check for column types and column names
             except (Exception, AssertionError) as e:
                 checks['column_schema_is_valid'] = False
+
+            table_name = request.data.get('table_name')
+            with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
+                psql_cursor.execute(
+                    sql.SQL('SELECT EXISTS(SELECT * FROM {})').format(
+                        sql.Identifier(table_name)
+                    )
+                )
+                table_exists = psql_cursor.fetchone()[0]
+                checks['table_does_not_exist'] = not table_exists
 
             return (
                 all(checks.values()),
