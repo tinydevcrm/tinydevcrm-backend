@@ -8,27 +8,6 @@ import psycopg2
 from psycopg2 import sql
 
 
-def create_fresh_psql_connection():
-    """
-    Creates a fresh PostgreSQL connection (not cached / memoized).
-
-    NOTE: It is the caller's responsibility to shut down the connection in a
-    responsible manner.
-
-    Returns:
-        psycopg2.extensions.connection: Connection to the current PostgreSQL
-        instance.
-    """
-    default_database_settings = settings.DATABASES.get('default')
-    _conn = psycopg2.connect(
-        user=default_database_settings.get('USER'),
-        password=default_database_settings.get('PASSWORD'),
-        host=default_database_settings.get('HOST'),
-        port=default_database_settings.get('PORT'),
-        database=default_database_settings.get('NAME')
-    )
-    return _conn
-
 DEFAULT_DATABASE_SETTINGS = settings.DATABASES.get('default')
 DEFAULT_POSTGRESQL_CONNECTION_CONFIG = {
     'user': DEFAULT_DATABASE_SETTINGS.get('USER'),
@@ -37,6 +16,7 @@ DEFAULT_POSTGRESQL_CONNECTION_CONFIG = {
     'port': DEFAULT_DATABASE_SETTINGS.get('PORT'),
     'database': DEFAULT_DATABASE_SETTINGS.get('NAME')
 }
+
 
 class PostgreSQLCursor(object):
     """
