@@ -56,7 +56,7 @@ class Table(models.Model):
     strictly be modeled as queries are defined as unstructured text.
     """
     table_name = models.CharField(max_length=255)
-    user_id = models.ForeignKey(
+    user = models.ForeignKey(
         auth_models.CustomUser,
         to_field='id',
         on_delete=models.PROTECT

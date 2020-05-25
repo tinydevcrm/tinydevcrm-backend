@@ -203,6 +203,15 @@ class CreateTableView(APIView):
             psql_cursor.execute(copy_table_sql_query)
             psql_cursor.execute(drop_temp_table_sql_query)
             psql_conn.commit()
+
+            table_serializer = serializers.TableSerializer(
+                data={
+                    'table_name': table_name,
+                    'user': request.user.id
+                }
+            )
+            if table_serializer.is_valid():
+                table_serializer.save()
         except Exception as e:
             return Response(
                 str(e),
