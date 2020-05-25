@@ -2,6 +2,7 @@
 Table service custom views.
 """
 
+import datetime
 import json
 import os
 
@@ -117,30 +118,6 @@ class CreateTableView(APIView):
                 checks
             )
 
-        # Create the PostgreSQL schema based on the Django user ID. Since the
-        # existence of tables undergirds everything else, including creation of
-        # materialized views and scheduled jobs, it should be safe to only
-        # include schema creation logic here.
-        SCHEMA_NAME = str(request.user.id)
-        # NOTE: For some reason, sql.Identifier(SCHEMA_NAME) does not work
-        # properly with integer values.
-        sql_statement = sql.SQL(
-            f'CREATE SCHEMA IF NOT EXISTS "{SCHEMA_NAME}"'
-        )
-        try:
-            psql_conn = core_utils.create_fresh_psql_connection()
-            psql_cursor = psql_conn.cursor()
-            psql_cursor.execute(sql_statement)
-            psql_conn.commit()
-        except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        finally:
-            psql_cursor.close()
-            psql_conn.close()
-
         (is_valid, validation_checks) = _validate(request)
         if not is_valid:
             return Response(
@@ -165,41 +142,71 @@ class CreateTableView(APIView):
         datafile = file_serializer.save()
 
         table_name = request.data.get('table_name')
-        columns = json.loads(request.data.get('columns'))
-        column_query = []
-        for column in columns:
-            column_query.append(
-                ' '.join([
-                    '"' + column.get('column_name') + '"',
-                    column.get('column_type').upper()
-                ])
-            )
-        column_query = ', '.join(column_query)
-        column_query = '(' + column_query + ')'
 
         file_abspath = os.path.join(
-            models.TABLE_ROOT,
-            request.data.get('file').name
+            settings.MEDIA_ROOT,
+            datafile.file.name
         )
-        # TODO: Use sql.SQL here for column query.
-        create_foreign_table_sql_query = f'CREATE FOREIGN TABLE "temp" {column_query} SERVER parquet_srv OPTIONS (filename \'{file_abspath}\');'
+
+        temp_table_name = f'temp_{str(request.user.id)}_created_{int(datetime.datetime.now().timestamp())}'
 
         copy_table_sql_query = sql.SQL(
-            f'CREATE TABLE "{SCHEMA_NAME}"."{table_name}" AS TABLE "temp" WITH DATA'
+            'CREATE TABLE {table_name} AS TABLE {temp_table_name} WITH DATA'
+        ).format(
+            table_name=sql.Identifier(table_name),
+            temp_table_name=sql.Identifier(temp_table_name)
         )
 
         drop_temp_table_sql_query = sql.SQL(
-            'DROP FOREIGN TABLE "temp"'
+            'DROP FOREIGN TABLE {temp_table_name}'
+        ).format(
+            temp_table_name=sql.Identifier(temp_table_name)
         )
 
-        # NOTE: Wrap connection in try/except/finally block in order to
-        # responsibly handle possible errors in executing SQL query.
-        try:
-            psql_conn = core_utils.create_fresh_psql_connection()
-            psql_cursor = psql_conn.cursor()
-            psql_cursor.execute(
-                sql.SQL(create_foreign_table_sql_query)
+        # Add error handling logic within this with block if there are numerous
+        # HTTP 500 errors that appear in logs.
+        with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
+            # Dynamic column creation makes table creation query much more
+            # tricky.
+            columns = json.loads(request.data.get('columns'))
+            column_names = [
+                column_def['column_name']
+                for column_def
+                in columns
+            ]
+            column_types = [
+                column_def['column_type'].upper()
+                for column_def
+                in columns
+            ]
+            column_query = sql.SQL(',').join([
+                sql.SQL('{} {}').format(
+                    sql.Identifier(column_name),
+                    sql.Placeholder()
+                )
+                for column_name
+                in column_names
+            ])
+
+            create_foreign_table_sql_query = sql.SQL(
+                'CREATE FOREIGN TABLE {temp_table_name} ({columns}) SERVER parquet_srv OPTIONS (filename {file_abspath});'
+            ).format(
+                temp_table_name=sql.Identifier(temp_table_name),
+                columns=column_query,
+                file_abspath=sql.Literal(file_abspath)
             )
+            create_foreign_table_sql_query = create_foreign_table_sql_query.as_string(psql_conn)
+
+            # TODO: I am concerned this may be a little insecure, since I am not
+            # referencing the DB API when templating this string. This has to be
+            # done because psycopg2.sql wraps elements within singly or doubly
+            # quoted strings, but column types are not strings. I think this
+            # should be fine because I can validate recognized column types as
+            # enumerations. That hasn't been done yet.
+            create_foreign_table_sql_query = create_foreign_table_sql_query % tuple(column_types)
+
+            psql_cursor.execute(create_foreign_table_sql_query)
+
             psql_cursor.execute(copy_table_sql_query)
             psql_cursor.execute(drop_temp_table_sql_query)
             psql_conn.commit()
@@ -212,14 +219,7 @@ class CreateTableView(APIView):
             )
             if table_serializer.is_valid():
                 table_serializer.save()
-        except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        finally:
-            # No matter what, delete the Parquet file in order to avoid building
-            # up cruft outside of /var/lib/postgresql/data.
+
             datafile.delete()
             # Deleting the data model does not delete the file. Do that
             # separately.
@@ -227,9 +227,6 @@ class CreateTableView(APIView):
                 settings.MEDIA_ROOT,
                 str(datafile.file)
             )))
-
-            psql_cursor.close()
-            psql_conn.close()
 
         return Response(
             file_serializer.data,
