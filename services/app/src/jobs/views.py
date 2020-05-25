@@ -9,6 +9,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core import utils as core_utils
+from views import models as view_models
+from views import utils as views_utils
+
+from . import serializers
 
 
 class CreateJobView(APIView):
@@ -64,24 +68,11 @@ class CreateJobView(APIView):
                 checks['crontab_def_is_valid'] = False
 
             view_name = request.data.get('view_name')
-            sql_statement = f'SELECT EXISTS(SELECT * FROM pg_matviews WHERE matviewname = \'{view_name}\')'
 
-            try:
-                psql_conn = core_utils.create_fresh_psql_connection()
-                psql_cursor = psql_conn.cursor()
-                psql_cursor.execute(
-                    sql.SQL(sql_statement)
-                )
-                view_exists = psql_cursor.fetchone()[0]
-                checks['view_exists'] = view_exists
-            except Exception as e:
-                return Response(
-                    str(e),
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            finally:
-                psql_cursor.close()
-                psql_conn.close()
+            checks['view_exists'] = views_utils.materialized_view_exists(
+                str(request.user.id),
+                view_name
+            )
 
             return (all(checks.values()), checks)
 
@@ -96,29 +87,46 @@ class CreateJobView(APIView):
         crontab_def = request.data.get('crontab_def')
         view_name = request.data.get('view_name')
 
-        sql_statement = f"SELECT cron.schedule('{crontab_def}', 'REFRESH MATERIALIZED VIEW \"{view_name}\"')"
+        view_objects = view_models.MaterializedView.objects.filter(
+            user=request.user.id,
+            view_name=view_name
+        )
+        if view_objects.count() != 1:
+            return Response(
+                'More than one materialized view with the same schema name and view name present. Data corrupted.',
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         # TODO: Implement method to fetch from PostgreSQL table 'cron.job' and
         # display cron jobs based on user
-        #
         # TODO: Implement method to insert into materialized view refresh events
         # table.
+        with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
+            # NOTE: This should be a comprehensive enough filter to get only and
+            # only one view.
+            sql_statement = sql.SQL(
+                "SELECT cron.schedule({}, 'REFRESH MATERIALIZED VIEW {}')"
+            ).format(
+                sql.Literal(crontab_def),
+                sql.Identifier("schema", "table")
+            )
 
-        try:
-            psql_conn = core_utils.create_fresh_psql_connection()
-            psql_cursor = psql_conn.cursor()
-            psql_cursor.execute(
-                sql.SQL(sql_statement)
-            )
+            psql_cursor.execute(sql_statement)
             psql_conn.commit()
-        except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+
+            job_id = psql_cursor.fetchone()[0]
+            view_id = view_objects.first().id
+
+            job_serializer = serializers.CronJobSerializer(
+                data={
+                    'job_id' : job_id,
+                    'user' : request.user.id,
+                    'view' : view_id
+                }
             )
-        finally:
-            psql_cursor.close()
-            psql_conn.close()
+
+            if job_serializer.is_valid():
+                job_serializer.save()
 
         return Response(
             'Successfully created cron job',
