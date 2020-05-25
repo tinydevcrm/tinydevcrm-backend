@@ -47,7 +47,8 @@ class CreateMaterializedViewAPIView(APIView):
             checks = {
                 'all_required_keys_are_present': True,
                 'query_starts_with_select_tables_or_values': True,
-                'query_does_not_contain_semicolons': True
+                'query_does_not_contain_semicolons': True,
+                'view_does_not_exist': True
             }
 
             if (
@@ -73,6 +74,17 @@ class CreateMaterializedViewAPIView(APIView):
             if ';' in sql_query:
                 checks['query_does_not_contain_semicolons'] = False
 
+            view_name = request.data.get('view_name')
+            with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
+                sql_statement = sql.SQL('SELECT EXISTS(SELECT 1 FROM pg_matviews WHERE schemaname = {schemaname} AND matviewname = {matviewname})').format(
+                    schemaname=sql.Literal(str(request.user.id)),
+                    matviewname=sql.Literal(view_name)
+                )
+
+                psql_cursor.execute(sql_statement)
+                view_exists = psql_cursor.fetchone()[0]
+                checks['view_does_not_exist'] = not view_exists
+
             return (all(checks.values()), checks)
 
         (is_valid_request, validation_checks) = _validate(request)
@@ -86,11 +98,15 @@ class CreateMaterializedViewAPIView(APIView):
         view_name = request.data.get('view_name')
         sql_query_request = request.data.get('sql_query')
 
-        sql_statement = f'CREATE MATERIALIZED VIEW {view_name} AS {sql_query_request} WITH DATA;'
+        with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
+            sql_statement = sql.SQL(
+                'CREATE MATERIALIZED VIEW {view_name} AS %s WITH DATA'
+            ).format(
+                view_name=sql.Identifier(view_name)
+            )
+            sql_statement = sql_statement.as_string(psql_conn)
+            sql_statement = sql_statement % sql_query_request
 
-        try:
-            psql_conn = core_utils.create_fresh_psql_connection()
-            psql_cursor = psql_conn.cursor()
             psql_cursor.execute(
                 sql.SQL(sql_statement)
             )
@@ -104,14 +120,6 @@ class CreateMaterializedViewAPIView(APIView):
             )
             if view_serializer.is_valid():
                 view_serializer.save()
-        except Exception as e:
-            return Response(
-                str(e),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        finally:
-            psql_cursor.close()
-            psql_conn.close()
 
         return Response(
             'Successfully created materialized view',
