@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core import utils as core_utils
+from . import utils as views_utils
 
 from . import serializers
 
@@ -74,16 +75,10 @@ class CreateMaterializedViewAPIView(APIView):
             if ';' in sql_query:
                 checks['query_does_not_contain_semicolons'] = False
 
-            view_name = request.data.get('view_name')
-            with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
-                sql_statement = sql.SQL('SELECT EXISTS(SELECT 1 FROM pg_matviews WHERE schemaname = {schemaname} AND matviewname = {matviewname})').format(
-                    schemaname=sql.Literal(str(request.user.id)),
-                    matviewname=sql.Literal(view_name)
-                )
-
-                psql_cursor.execute(sql_statement)
-                view_exists = psql_cursor.fetchone()[0]
-                checks['view_does_not_exist'] = not view_exists
+            checks['view_does_not_exist'] = not views_utils.materialized_view_exists(
+                str(request.user.id),
+                request.data.get('view_name')
+            )
 
             return (all(checks.values()), checks)
 
