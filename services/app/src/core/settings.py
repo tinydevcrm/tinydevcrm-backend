@@ -56,8 +56,8 @@ INSTALLED_APPS = [
     'views',
     # Jobs service #
     'jobs',
-    # Events service #
-    'events',
+    # Channels service #
+    'channels',
 ]
 
 MIDDLEWARE = [

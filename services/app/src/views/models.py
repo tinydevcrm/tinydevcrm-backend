@@ -16,8 +16,8 @@ class EnumStatusTypes(models.TextChoices):
 class EventRefreshes(models.Model):
     """
     Models for issuing materialized view refreshes. This is important because
-    trigger definitions for sending out events depend on listening to this table
-    specifically for sending out a new event.
+    trigger definitions for sending out events on a channel depend on listening
+    to this table specifically for sending out a new event.
     """
     # TODO: Change materialized view name from a plain text file to a reference
     # to a materialized views table for when it becomes user-aware.

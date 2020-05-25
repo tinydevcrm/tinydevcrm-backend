@@ -72,11 +72,11 @@ urlpatterns = [
         )
     ),
     re_path(
-        r'^events/',
+        r'^channels/',
         include(
             (
-                'events.urls',
-                'events'
+                'channels.urls',
+                'channels'
             )
         )
     ),
