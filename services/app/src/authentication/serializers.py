@@ -36,7 +36,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         representation in the database).
         """
         model = models.CustomUser
-        fields = ('full_name', 'primary_email', 'password')
+        fields = ('username', 'full_name', 'primary_email', 'password')
         extra_kwargs = {
             'password': {
                 'write_only': True

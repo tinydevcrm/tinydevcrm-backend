@@ -11,10 +11,20 @@ from django.core.management import CommandError
 
 class Command(createsuperuser.Command):
     """
-    Extending 'python manage.py createsuperuser' with scripted password support.
+    Extending 'python manage.py createsuperuser' with scripted password and
+    email support.
     """
     def add_arguments(self, parser):
+        import ipdb
+        ipdb.set_trace()
+
         super(Command, self).add_arguments(parser)
+        parser.add_argument(
+            '--primary-email',
+            dest='primary_email',
+            default=None,
+            help='Specifies the primary email for the superuser.'
+        )
         parser.add_argument(
             '--password',
             dest='password',
@@ -23,7 +33,7 @@ class Command(createsuperuser.Command):
         )
 
     def handle(self, *args, **options):
-        primary_email = options.get('primary_email')
+        username = options.get('username')
         password = options.get('password')
         database = options.get('database')
 
@@ -31,7 +41,5 @@ class Command(createsuperuser.Command):
 
         if password:
             user = self.UserModel._default_manager.db_manager(database).get(
-                primary_email=primary_email
+                username=username
             )
-            user.set_password(password)
-            user.save()

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Register a new test user.
-curl --header "Content-Type: application/json" -X POST http://localhost:8000/auth/users/register/ --data '{"primary_email": "me@yingw787.com", "password": "test1234"}' || true
+curl --header "Content-Type: application/json" -X POST http://localhost:8000/auth/users/register/ --data '{"username": "yingw787", "primary_email": "me@yingw787.com", "full_name": "Ying Wang", "password": "test1234"}' || true
 
 # Obtain a JSON web token.
-RESPONSE=$(curl --header "Content-Type: application/json" -X POST http://localhost:8000/auth/tokens/obtain/ --data '{"primary_email": "me@yingw787.com", "password": "test1234"}')
+RESPONSE=$(curl --header "Content-Type: application/json" -X POST http://localhost:8000/auth/tokens/obtain/ --data '{"username": "yingw787", "password": "test1234"}')
 
 echo "Response is: " $RESPONSE
 
