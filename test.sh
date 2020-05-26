@@ -21,7 +21,12 @@ curl --header "Content-Type: multipart/form-data" --header "Authorization: JWT $
 curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "sql_query": "SELECT * FROM sample_table"}' http://localhost:8000/views/create/
 
 # Create scheduled job.
-curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "crontab_def": "* * * * *"}' http://localhost:8000/jobs/create/
+JOB_RESPONSE=$(curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "crontab_def": "* * * * *"}' http://localhost:8000/jobs/create/)
+
+CRON_JOB_ID=1
+
+# Issue event on pub/sub upon insert into_table refresh view event.
+curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"job_id": "${CRON_JOB_ID}"}' http://localhost:8000/channels/create/
 
 # Create materialized view refreshes table to store job scheduler events. Should
 # be done as part of a migration. DONE
@@ -30,5 +35,3 @@ curl --header "Content-Type: application/json" --header "Authorization: JWT $ACC
 
 # Register materialized view with 'pg_cron' and insert materialized view into
 # refreshes table (good to separate out whether or not a refresh is active) DONE
-
-# Issue event on pub/sub upon insert into_table refresh view event.
