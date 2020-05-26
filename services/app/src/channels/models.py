@@ -8,7 +8,6 @@ from django.db import models
 
 from authentication import models as auth_models
 from jobs import models as jobs_models
-from views import models as views_models
 
 
 class Channel(models.Model):
@@ -20,6 +19,16 @@ class Channel(models.Model):
         default=uuid.uuid4,
         editable=False
     )
+    # TODO: Currently there's a many-to-one correlation between channels and
+    # jobs. As in, many channels can reference one job. I think this is
+    # backwards, because ideally one channel can listen to many jobs. However,
+    # this would imply that a channel has to be created before a job is, or a
+    # job has to be updated with a channel after channel creation. Need to go
+    # over this data model during a second pass of this project after everything
+    # is set up, because a channel should definitely be able to listen to
+    # multiple jobs.
+    #
+    # Just assume a basic one-to-one association for now.
     job = models.ForeignKey(
         jobs_models.CronJob,
         on_delete=models.PROTECT,
@@ -27,11 +36,6 @@ class Channel(models.Model):
     )
     user = models.ForeignKey(
         auth_models.CustomUser,
-        on_delete=models.PROTECT,
-        to_field='id'
-    )
-    view = models.ForeignKey(
-        views_models.MaterializedView,
         on_delete=models.PROTECT,
         to_field='id'
     )
