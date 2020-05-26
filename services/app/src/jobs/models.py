@@ -19,10 +19,9 @@ class CronJob(models.Model):
     TODO: Figure out whether there's a way in order to extend automatically
     created table 'cron.job' for application-specific purposes.
     """
-    # TODO: There are likely constraints within 'cron.job' that can be applied
-    # to job ID, not sure whether they can be referenced here since 'cron.job'
-    # isn't modeled within Django.
-    job_id = models.IntegerField()
+    # ID from table 'cron.job', must be unique because it's referenced as a
+    # foreign key by the channels model.
+    job_id = models.IntegerField(unique=True)
     user = models.ForeignKey(
         auth_models.CustomUser,
         on_delete=models.PROTECT,
