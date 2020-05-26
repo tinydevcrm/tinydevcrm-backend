@@ -237,6 +237,6 @@ class CreateTableView(APIView):
             )))
 
         return Response(
-            file_serializer.data,
+            table_serializer.data,
             status=status.HTTP_201_CREATED
         )

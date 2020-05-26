@@ -129,6 +129,6 @@ class CreateJobView(APIView):
                 job_serializer.save()
 
         return Response(
-            'Successfully created cron job',
+            job_serializer.data,
             status=status.HTTP_201_CREATED
         )
