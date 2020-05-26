@@ -23,10 +23,27 @@ curl --header "Content-Type: application/json" --header "Authorization: JWT $ACC
 # Create scheduled job.
 JOB_RESPONSE=$(curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"view_name": "sample_view", "crontab_def": "* * * * *"}' http://localhost:8000/jobs/create/)
 
-CRON_JOB_ID=1
+echo "Job response is: " $JOB_RESPONSE
 
-# Issue event on pub/sub upon insert into_table refresh view event.
-curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data '{"job_id": "${CRON_JOB_ID}"}' http://localhost:8000/channels/create/
+# IMPORTANT use jq in order to create a new JSON dict, cast value to string
+CHANNEL_REQUEST_DATA=$(echo $JOB_RESPONSE | jq '{job_id: .job_id|tostring}')
+
+echo "Channel request data is: " $CHANNEL_REQUEST_DATA
+
+# Create channel to listen to one specific cron job.
+# IMPORTANT wrap data in double quotes in order to preserve bash variables,
+# doesn't matter that internal variables are double quoted as well
+CHANNELS_RESPONSE=$(curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST --data "$CHANNEL_REQUEST_DATA" http://localhost:8000/channels/create/)
+
+CHANNEL_ID=$(echo $CHANNELS_RESPONSE | jq -r ".public_identifier")
+
+echo "Channel ID is: " $CHANNEL_ID
+
+# # Open channel for cron job refreshes.
+# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/channels/listen/$CHANNEL_ID/open/
+
+# # Listen to channel for cron job refreshes.
+# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/channels/listen/$CHANNEL_ID/listen/
 
 # Create materialized view refreshes table to store job scheduler events. Should
 # be done as part of a migration. DONE
