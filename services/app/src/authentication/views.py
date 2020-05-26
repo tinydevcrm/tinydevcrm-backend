@@ -26,9 +26,9 @@ class CustomUserRegister(APIView):
     authentication_classes = ()
 
     def post(self, request, format='json'):
-        serializer = CustomUserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
+        user_serializer = CustomUserSerializer(data=request.data)
+        if user_serializer.is_valid():
+            user = user_serializer.save()
             if user:
                 # If the user is successfully created and saved into the
                 # database, create a schema for that user in order to place all
@@ -42,13 +42,12 @@ class CustomUserRegister(APIView):
                     psql_cursor.execute(create_schema_sql_statement)
                     psql_conn.commit()
 
-                json = serializer.data
                 return Response(
-                    json,
+                    user_serializer.data,
                     status=status.HTTP_201_CREATED
                 )
         return Response(
-            serializer.errors,
+            user_serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
 
