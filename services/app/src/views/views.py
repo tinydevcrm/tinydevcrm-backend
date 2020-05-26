@@ -117,6 +117,6 @@ class CreateMaterializedViewAPIView(APIView):
                 view_serializer.save()
 
         return Response(
-            'Successfully created materialized view',
+            view_serializer.data,
             status=status.HTTP_201_CREATED
         )
