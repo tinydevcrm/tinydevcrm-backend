@@ -6,6 +6,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from jobs import utils as jobs_utils
+from . import serializers
+
 
 class CreateChannelView(APIView):
     """
@@ -25,9 +28,61 @@ class CreateChannelView(APIView):
             --data '{"job_id": "some_job_id", "view_name": "some_view_name"}' \
             https://api.tinydevcrm.com/channels/create/
         """
-        # TODO: Implement.
-        # TODO: Return serializer data instead of text message.
+        def _validate(request):
+            """
+            Validates request.
+
+            Args:
+                rest_framework.request.Request
+
+            Returns:
+                (bool, dict): (Request is valid, reasons)
+            """
+            checks = {
+                'all_required_keys_are_present': True,
+                'job_exists': True
+            }
+
+            if (
+                not request.data.get('job_id')
+            ):
+                checks['all_required_keys_are_present'] = False
+
+            job_id = request.data.get('job_id')
+            checks['job_exists'] = jobs_utils.cron_job_exists(
+                str(request.user.id),
+                str(job_id)
+            )
+
+            return (all(checks.values()), checks)
+
+        (is_valid_request, validation_checks) = _validate(request)
+
+        if not is_valid_request:
+            return Response(
+                f'Request did not pass validation. Checks: {str(validation_checks)}',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        job_id = request.data.get('job_id')
+        user_id = request.user.id
+
+        channel_serializer = serializers.ChannelModelSerializer(
+            data={
+                'job' : job_id,
+                'user' : request.user.id
+            }
+        )
+
+        if channel_serializer.is_valid():
+            channel_serializer.save()
+        else:
+            return Response(
+                channel_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         return Response(
-            "Successfully created channel",
+            channel_serializer.data,
             status=status.HTTP_201_CREATED
         )
