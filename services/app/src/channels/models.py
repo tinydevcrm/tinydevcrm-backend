@@ -2,12 +2,38 @@
 Django models for channels service.
 """
 
+import os
 import uuid
 
+from django.conf import settings
+from django.contrib.postgres import fields as psql_fields
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from authentication import models as auth_models
 from jobs import models as jobs_models
+
+
+CHANNELS_URL = 'channels'
+CHANNELS_ROOT = os.path.join(
+    settings.MEDIA_ROOT,
+    CHANNELS_URL
+)
+
+
+class EnumChannelStatusTypes(models.TextChoices):
+    ACTIVE = 'ACTIVE',_('Channel is open and active, currently sending events out')
+    INACTIVE = 'INACTIVE',_('Channel has been created, but is not active')
+
+
+def default_channels_json_payload():
+    """
+    Wraps the default JSON payload for the Django channels model in order to
+    enforce immutability.
+    """
+    return {
+        'update_available': 'true'
+    }
 
 
 class Channel(models.Model):
@@ -38,4 +64,20 @@ class Channel(models.Model):
         auth_models.CustomUser,
         on_delete=models.PROTECT,
         to_field='id'
+    )
+    storedprocedure_create_trigger = models.FileField(
+        null=True,
+        upload_to=CHANNELS_URL
+    )
+    stored_procedure_drop_trigger = models.FileField(
+        null=True,
+        upload_to=CHANNELS_URL
+    )
+    channel_status = models.CharField(
+        max_length=16,
+        choices=EnumChannelStatusTypes.choices,
+        default=EnumChannelStatusTypes.INACTIVE
+    )
+    json_payload = psql_fields.JSONField(
+        default=default_channels_json_payload
     )
