@@ -48,6 +48,11 @@ INSTALLED_APPS = [
     # DRF SimpleJWT token blacklist for BlacklistMixin
     'rest_framework_simplejwt.token_blacklist',
 
+    # django-channels
+    'channels',
+    # django-eventstream
+    'django_eventstream',
+
     # Authentication service #
     'authentication',
     # Tables service #
@@ -57,10 +62,12 @@ INSTALLED_APPS = [
     # Jobs service #
     'jobs',
     # Channels service #
-    'channels',
+    'channels_app',
 ]
 
 MIDDLEWARE = [
+    # django-grip
+    'django_grip.GripMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # CORS middleware; I think from the README Django middleware ordering is

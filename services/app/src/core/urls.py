@@ -75,8 +75,8 @@ urlpatterns = [
         r'^channels/',
         include(
             (
-                'channels.urls',
-                'channels'
+                'channels_app.urls',
+                'channels_app'
             )
         )
     ),
