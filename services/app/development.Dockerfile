@@ -13,13 +13,16 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
-RUN apt-get install -y update && \
-    apt-get install -y postgresql-dev gcc python3-dev musl-dev
+RUN apt-get -y update && \
+    apt-get -y install postgresql-server-dev-all gcc python3-dev libc-dev
 
 # install dependencies
 RUN pip install --upgrade pip
 COPY ./conf/requirements.txt ${BASEDIR}/requirements.txt
 RUN pip install -r requirements.txt
+
+# Install netcat for entrypoint.
+RUN apt-get -y install netcat
 
 # copy entrypoint.sh
 COPY ./conf/entrypoint.development.sh /usr/entrypoint.sh
