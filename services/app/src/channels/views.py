@@ -12,8 +12,7 @@ from . import serializers
 
 class CreateChannelView(APIView):
     """
-    Handles 'LISTEN/NOTIFY' events from the database and "lifts" them to HTTP
-    context.
+    Handles channel creation in Django models.
     """
     def post(self, request, *args, **kwargs):
         """
@@ -86,3 +85,55 @@ class CreateChannelView(APIView):
             channel_serializer.data,
             status=status.HTTP_201_CREATED
         )
+
+
+class OpenChannelView(APIView):
+    """
+    Calls trigger to execute 'LISTEN/NOTIFY' events from the database and
+    "lifts" them to HTTP context.
+
+    This is managed separately from channel creation because channel management
+    lifecycles should be different from channel usage lifecycles, as the former
+    should be
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        Handles the HTTP POST request.
+        """
+        import ipdb
+        ipdb.set_trace()
+
+        # TODO: Implement
+        pass
+
+
+class CloseChannelView(APIView):
+    """
+    Calls stored procedure to drop the function and trigger created by channel
+    opening.
+    """
+    def post(self, request, *args, **kwargs):
+        """
+        Handles the HTTP POST request.
+        """
+        import ipdb
+        ipdb.set_trace()
+
+        # TODO: Implement
+        pass
+
+
+class ListenChannelView(APIView):
+    """
+    Returns an event stream that continuously sends over data until it is shut
+    down.
+    """
+    def get(self, request, *args, **kwargs):
+        """
+        Handles the HTTP GET request.
+        """
+        import ipdb
+        ipdb.set_trace()
+
+        # TODO: Implement
+        pass
