@@ -9,8 +9,8 @@ version:
 # NOTE: Don't run the web Docker container in detached mode, since `python -m
 # ipdb` will hook within `settings.py` and cause the container to fail to start.
 dev-up:
-	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose up -d --build db
-	@echo "Open http://localhost:8000 to see results."
+	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose up -d --build db pushpin
+	xdg-open http://localhost:8000/admin
 	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml build web
 	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run --service-ports web
 
