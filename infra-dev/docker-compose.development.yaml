@@ -36,6 +36,12 @@ services:
       - ${GIT_REPO_ROOT}/services/db/conf/.env.dev
     networks:
       dev_network:
+  pushpin:
+    build:
+      context: ${GIT_REPO_ROOT}/services/pushpin
+      dockerfile: Dockerfile
+    networks:
+      dev_network:
 
 volumes:
   # Persisting the data within the PostgreSQL instance to a Docker volume,
