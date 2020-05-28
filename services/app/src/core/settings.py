@@ -100,12 +100,7 @@ TEMPLATES = [
 ]
 
 
-WSGI_APPLICATION = (
-    'wsgi.application'
-    if DEBUG
-    else
-    'src.core.wsgi.application'
-)
+ASGI_APPLICATION = 'core.routing.application'
 
 
 # Database
