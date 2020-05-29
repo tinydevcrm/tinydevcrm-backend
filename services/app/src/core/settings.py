@@ -233,3 +233,12 @@ MEDIA_ROOT = os.environ.get(
     'MEDIA_ROOT',
     '/tinydevcrm-files'
 )
+
+
+GRIP_URL = os.environ.get(
+    'GRIP_URL',
+    'http://localhost:5561'
+)
+
+
+EVENTSTREAM_STORAGE_CLASS = 'django_eventstream.storage.DjangoModelStorage'
