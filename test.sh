@@ -39,16 +39,16 @@ CHANNEL_ID=$(echo $CHANNELS_RESPONSE | jq -r ".public_identifier")
 
 echo "Channel ID is: " $CHANNEL_ID
 
-# # Open channel for cron job refreshes.
-# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/channels/listen/$CHANNEL_ID/open/
+# # TODO: Open channel for cron job refreshes.
+# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X POST http://localhost:8000/channels/listen/$CHANNEL_ID/open/
 
-# # Listen to channel for cron job refreshes.
-# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/channels/listen/$CHANNEL_ID/listen/
+# # Listen to channel for cron job refreshes. THIS WORKS RIGHT NOW BUT TAKES UP THE FULL TERMINAL, RUN IN A SEPARATE TERMINAL
+# curl --header "Content-Type: application/json" --header "Authorization: JWT $ACCESS" -X GET http://localhost:8000/channels/$CHANNEL_ID/listen/
 
-# Create materialized view refreshes table to store job scheduler events. Should
-# be done as part of a migration. DONE
+# TODO: Create materialized view refreshes table to store job scheduler events.
+# Should be done as part of a migration.
 
-# Refresh materialized view. DONE
+# TODO: Refresh materialized view.
 
-# Register materialized view with 'pg_cron' and insert materialized view into
-# refreshes table (good to separate out whether or not a refresh is active) DONE
+# TODO: Register materialized view with 'pg_cron' and insert materialized view
+# into refreshes table (good to separate out whether or not a refresh is active)
