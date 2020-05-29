@@ -1,5 +1,8 @@
 """
 Channels service API endpoint configuration.
+
+NOTE: Not using uuid:identifier, since protocol handling of identifier is done
+by dependency. Dependency may be assumed to expect string.
 """
 
 from django.urls import include
@@ -27,14 +30,6 @@ urlpatterns = [
     ),
     path(
         '<identifier>/listen/',
-        views.listen,
-        name='channel_listen'
-    ),
-    path(
-        # NOTE: Not using uuid:identifier, since protocol handling of identifier
-        # is done by dependency. Dependency assumed to expect string and avoid
-        # UUID parsing, therefore strip UUID casting.
-        '<identifier>/events/',
         include(django_eventstream.urls),
         {
             'format-channels': ['{identifier}']
