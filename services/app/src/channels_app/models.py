@@ -65,11 +65,7 @@ class Channel(models.Model):
         on_delete=models.PROTECT,
         to_field='id'
     )
-    storedprocedure_create_trigger = models.FileField(
-        null=True,
-        upload_to=CHANNELS_URL
-    )
-    stored_procedure_drop_trigger = models.FileField(
+    storedprocedure_file = models.FileField(
         null=True,
         upload_to=CHANNELS_URL
     )
