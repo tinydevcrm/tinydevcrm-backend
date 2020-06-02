@@ -3,6 +3,7 @@ Django models for jobs service.
 """
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from authentication import models as auth_models
 from views import models as view_models
@@ -31,4 +32,34 @@ class CronJob(models.Model):
         view_models.MaterializedView,
         on_delete=models.PROTECT,
         to_field='id'
+    )
+
+
+# NOTE: Python-based enum.Enum type underneath the hood, that may map to enum
+# types using the Django ORM:
+# https://schinckel.net/2019/09/18/postgres-enum-types-in-django/
+class EnumStatusTypes(models.TextChoices):
+    NEW = 'NEW',_('New event, not processed / sent')
+    SENT = 'SENT',_('Processed event already sent')
+
+
+class EventRefreshes(models.Model):
+    """
+    Models for issuing materialized view refreshes. This is important because
+    trigger definitions for sending out events on a channel depend on listening
+    to this table specifically for sending out a new event.
+
+    NOTE: Foreign key references for same-file models must be ordered. See this
+    Stack Overflow answer: https://stackoverflow.com/a/17658689
+    """
+    view = models.ForeignKey(
+        view_models.MaterializedView,
+        on_delete=models.PROTECT,
+        to_field='id'
+    )
+    created = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=16,
+        choices=EnumStatusTypes.choices,
+        default=EnumStatusTypes.NEW
     )
