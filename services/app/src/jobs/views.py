@@ -12,6 +12,7 @@ from core import utils as core_utils
 from views import models as view_models
 from views import utils as views_utils
 
+from . import models
 from . import serializers
 
 
@@ -96,26 +97,33 @@ class CreateJobView(APIView):
                 'More than one materialized view with the same schema name and view name present. Data corrupted.',
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        view_id = view_objects.first().id
 
-        # TODO: Implement method to fetch from PostgreSQL table 'cron.job' and
-        # display cron jobs based on user
-        # TODO: Implement method to insert into materialized view refresh events
-        # table.
         with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
-            # NOTE: This should be a comprehensive enough filter to get only and
-            # only one view.
-            sql_statement = sql.SQL(
-                "SELECT cron.schedule({}, 'REFRESH MATERIALIZED VIEW {}')"
-            ).format(
-                sql.Literal(crontab_def),
-                sql.Identifier("schema", "table")
+            # NOTE: Chain together SQL queries to execute as one job. This may
+            # help ensure atomicity in behavior. Otherwise, each entry in the
+            # Django CronJob model will have multiple "ids".
+            #
+            # NOTE: The 'INSERT' query references the EventRefreshes Django
+            # model, and must be updated manually if the model is updated. See
+            # 'jobs/models.py' for more information.
+            refresh_view_scheduled_query = sql.SQL('REFRESH MATERIALIZED VIEW {view_name}; INSERT INTO jobs_eventrefreshes(view_id, created, status) VALUES (\'{view_id}\', NOW(), \'{status}\')').format(
+                view_name=sql.Identifier(str(request.user.id), view_name),
+                view_id=sql.Literal(str(view_id)),
+                status=sql.Literal(str(models.EnumStatusTypes.NEW))
             )
 
-            psql_cursor.execute(sql_statement)
+            refresh_view_sql_statement = sql.SQL(
+                "SELECT cron.schedule({crontab_def}, '{scheduled_query}')"
+            ).format(
+                crontab_def=sql.Literal(crontab_def),
+                scheduled_query=refresh_view_scheduled_query
+            )
+
+            psql_cursor.execute(refresh_view_sql_statement)
             psql_conn.commit()
 
             job_id = psql_cursor.fetchone()[0]
-            view_id = view_objects.first().id
 
             job_serializer = serializers.CronJobSerializer(
                 data={
