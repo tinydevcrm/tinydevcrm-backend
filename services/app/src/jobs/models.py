@@ -49,8 +49,17 @@ class EventRefreshes(models.Model):
     trigger definitions for sending out events on a channel depend on listening
     to this table specifically for sending out a new event.
 
-    NOTE: Foreign key references for same-file models must be ordered. See this
-    Stack Overflow answer: https://stackoverflow.com/a/17658689
+    TODO: While Django migrations will help manage schemas and existing data
+    within this table, updating the schema will force an update of the
+    unstructured text query during 'SELECT cron.schedule()' in 'jobs/views.py'.
+    Usage of unstructured queries is necessary because the Django ORM isn't
+    present during cron job execution. Figure out a way in order to generate a
+    templatable unstructured query to use in 'jobs/views.py'.
+
+    This limitation should not significantly impact ability to send arbitrary
+    JSON payloads over HTTP/2. Since there is a process on the webapp in order
+    to broker requests between the database and the reverse proxy, the final
+    JSON payload can be constructed by the webapp.
     """
     view = models.ForeignKey(
         view_models.MaterializedView,
