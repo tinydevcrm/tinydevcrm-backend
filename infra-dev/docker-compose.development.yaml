@@ -39,7 +39,7 @@ services:
   pushpin:
     build:
       context: ${GIT_REPO_ROOT}/services/pushpin
-      dockerfile: Dockerfile
+      dockerfile: development.Dockerfile
     ports:
       - 7999:7999
       - 5560-5563:5560-5563
