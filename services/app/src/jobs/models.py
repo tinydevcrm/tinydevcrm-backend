@@ -60,7 +60,18 @@ class EventRefreshes(models.Model):
     JSON payloads over HTTP/2. Since there is a process on the webapp in order
     to broker requests between the database and the reverse proxy, the final
     JSON payload can be constructed by the webapp.
+
+    NOTE: This Django model is highly sensitive! Since the underlying PostgreSQL
+    table is referenced by SQL files directly without using the Django ORM,
+    including at application startup, running migrations on this table is nigh
+    impossible without shutting down the Django application entirely. Field
+    definitions should be limited and justified.
     """
+    job = models.ForeignKey(
+        CronJob,
+        on_delete=models.PROTECT,
+        to_field='id'
+    )
     view = models.ForeignKey(
         view_models.MaterializedView,
         on_delete=models.PROTECT,
