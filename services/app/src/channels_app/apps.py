@@ -5,7 +5,6 @@ Startup configuration for Django app 'channels_app'.
 import os
 
 from django.apps import AppConfig
-from django.core.management import execute_from_command_line
 from django.db.migrations.executor import MigrationExecutor
 from django.db import connections
 from django.db import DEFAULT_DB_ALIAS
