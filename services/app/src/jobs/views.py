@@ -3,6 +3,7 @@ Jobs service custom API views.
 """
 
 from cron_validator import CronValidator
+from django.forms.models import model_to_dict
 from psycopg2 import sql
 from rest_framework import status
 from rest_framework.response import Response
@@ -100,43 +101,81 @@ class CreateJobView(APIView):
         view_id = view_objects.first().id
 
         with core_utils.PostgreSQLCursor(db_schema=request.user.id) as (psql_conn, psql_cursor):
-            # NOTE: Chain together SQL queries to execute as one job. This may
-            # help ensure atomicity in behavior. Otherwise, each entry in the
-            # Django CronJob model will have multiple "ids".
-            #
             # NOTE: The 'INSERT' query references the EventRefreshes Django
             # model, and must be updated manually if the model is updated. See
             # 'jobs/models.py' for more information.
-            refresh_view_scheduled_query = sql.SQL('REFRESH MATERIALIZED VIEW {view_name}; INSERT INTO jobs_eventrefreshes(view_id, created, status) VALUES (\'{view_id}\', NOW(), \'{status}\')').format(
-                view_name=sql.Identifier(str(request.user.id), view_name),
-                view_id=sql.Literal(str(view_id)),
-                status=sql.Literal(str(models.EnumStatusTypes.NEW))
+            #
+            # TODO: Each channel needs a corrseponding job ID to listen to. That
+            # information must be communicated from the event refreshes table,
+            # since that is what the underlying trigger listens to. The job ID
+            # does not exist until the PostgreSQL function 'cron.schedule' is
+            # run. Therefore, the job creation for materialized view, and
+            # inserting into the event refreshes table must be split into two
+            # components. This may impact the atomicity of operations (e.g. if a
+            # refresh event for a materialized view doesn't work, an event may
+            # still be sent over the channel), which may impact the amount of
+            # work necessary in order to ensure correctness. This might be
+            # prevented if job ID was mapped to a list of cron jobs for the
+            # CronJob Django model.
+            refresh_view_scheduled_query = sql.SQL(
+                'REFRESH MATERIALIZED VIEW {view_name}'
+            ).format(
+                view_name=sql.Identifier(str(request.user.id))
             )
-
             refresh_view_sql_statement = sql.SQL(
                 "SELECT cron.schedule({crontab_def}, '{scheduled_query}')"
             ).format(
                 crontab_def=sql.Literal(crontab_def),
                 scheduled_query=refresh_view_scheduled_query
             )
-
             psql_cursor.execute(refresh_view_sql_statement)
+            # NOTE: This commit is necessary in order to get the job ID
+            # necessary for insertion into the notify_channel_scheduled_query.
             psql_conn.commit()
 
+            # Create the Django CronJob model.
             job_id = psql_cursor.fetchone()[0]
-
             job_serializer = serializers.CronJobSerializer(
                 data={
-                    'job_id' : job_id,
+                    'job_ids' : [job_id],
                     'user' : request.user.id,
                     'view' : view_id
                 }
             )
+            if not job_serializer.is_valid():
+                return Response(
+                    job_serializer.errors(),
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
-            if job_serializer.is_valid():
-                job_serializer.save()
+            cronjob = job_serializer.save()
+
+            # NOTE: Job ID here refers to the CronJob ID, in order to reference
+            # the foreign key for the appropriate channel to send this event on.
+            notify_channel_scheduled_query = sql.SQL(
+                'INSERT INTO jobs_eventrefreshes(job_id, view_id, created, status) VALUES (\'{job_id}\', \'{view_id}\', NOW(), \'{status}\')'
+            ).format(
+                job_id=sql.Literal(str(cronjob.id)),
+                view_id=sql.Literal(str(cronjob.view.id)),
+                status=sql.Literal(str(models.EnumStatusTypes.NEW))
+            )
+            notify_channel_sql_query = sql.SQL(
+                "SELECT cron.schedule({crontab_def}, '{scheduled_query}')"
+            ).format(
+                crontab_def=sql.Literal(crontab_def),
+                scheduled_query=notify_channel_scheduled_query
+            )
+            psql_cursor.execute(notify_channel_sql_query)
+            psql_conn.commit()
+
+            # Update existing cronjob field.
+            job2_id = psql_cursor.fetchone()[0]
+            cronjob.job_ids = cronjob.job_ids + [job2_id]
+            cronjob.save(update_fields=['job_ids'])
+
+        job_data = model_to_dict(cronjob)
 
         return Response(
-            job_serializer.data,
+            job_data,
             status=status.HTTP_201_CREATED
         )
