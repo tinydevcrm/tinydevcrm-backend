@@ -1,5 +1,13 @@
 """
 Channels service custom API views.
+
+TODO: Channels are unique because 'django_eventstream' and the reverse proxy
+(Pushpin) handle the channel opening and closing, not the Django application.
+The only thing the application guarantees at the moment is creating and deleting
+channels, so that calling <channel-id>/listen/ will actually see results from
+the backend. Ideally, channel listening should be validated with the Django
+Channels model, and an HTTP 400 Bad Request response should be returned if the
+channel UUID does not match.
 """
 
 from rest_framework import status
@@ -24,7 +32,7 @@ class CreateChannelView(APIView):
             --header "Content-Type: application/json" \
             --header "Authorization: JWT $JWT_ACCESS_TOKEN" \
             --method POST \
-            --data '{"job_id": "some_job_id", "view_name": "some_view_name"}' \
+            --data '{"job_id": "some_job_id"}' \
             https://api.tinydevcrm.com/channels/create/
         """
         def _validate(request):
@@ -85,55 +93,3 @@ class CreateChannelView(APIView):
             channel_serializer.data,
             status=status.HTTP_201_CREATED
         )
-
-
-class OpenChannelView(APIView):
-    """
-    Calls trigger to execute 'LISTEN/NOTIFY' events from the database and
-    "lifts" them to HTTP context.
-
-    This is managed separately from channel creation because channel management
-    lifecycles should be different from channel usage lifecycles, as the former
-    should be
-    """
-    def post(self, request, *args, **kwargs):
-        """
-        Handles the HTTP POST request.
-        """
-        import ipdb
-        ipdb.set_trace()
-
-        # TODO: Implement
-        pass
-
-
-class CloseChannelView(APIView):
-    """
-    Calls stored procedure to drop the function and trigger created by channel
-    opening.
-    """
-    def post(self, request, *args, **kwargs):
-        """
-        Handles the HTTP POST request.
-        """
-        import ipdb
-        ipdb.set_trace()
-
-        # TODO: Implement
-        pass
-
-
-class ListenChannelView(APIView):
-    """
-    Returns an event stream that continuously sends over data until it is shut
-    down.
-    """
-    def get(self, request, *args, **kwargs):
-        """
-        Handles the HTTP GET request.
-        """
-        import ipdb
-        ipdb.set_trace()
-
-        # TODO: Implement
-        pass
