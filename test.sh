@@ -26,7 +26,7 @@ JOB_RESPONSE=$(curl --header "Content-Type: application/json" --header "Authoriz
 echo "Job response is: " $JOB_RESPONSE
 
 # IMPORTANT use jq in order to create a new JSON dict, cast value to string
-CHANNEL_REQUEST_DATA=$(echo $JOB_RESPONSE | jq '{job_id: .job_id|tostring}')
+CHANNEL_REQUEST_DATA=$(echo $JOB_RESPONSE | jq '{job_id: .id|tostring}')
 
 echo "Channel request data is: " $CHANNEL_REQUEST_DATA
 
