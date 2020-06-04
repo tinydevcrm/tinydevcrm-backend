@@ -25,19 +25,18 @@ should make for much easier deployment to AWS ECS.
 import json
 import select
 
-from background_task import background
 from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
 import django_eventstream
 import psycopg2
 from psycopg2 import sql
 
+from core import utils as core_utils
 from views import models as view_models
 from channels_app import models
 from channels_app import views
 
 
-@background(queue='channel-broker')
 def broker_proc():
     """
     Task definition for broker process to run in compute instance background.
@@ -115,9 +114,5 @@ def broker_proc():
 class Command(BaseCommand):
     help = 'Starts the background process to broker messages between channels on the PostgreSQL database and the Pushpin reverse proxy.'
 
-
     def handle(self, *args, **kwargs):
-        import ipdb
-        ipdb.set_trace()
-
-        pass
+        broker_proc()
