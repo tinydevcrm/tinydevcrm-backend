@@ -18,4 +18,11 @@ urlpatterns = [
         views.CreateChannelView().as_view(),
         name='channel_create'
     ),
+    path(
+        '<identifier>/listen/',
+        include(django_eventstream.urls),
+        {
+            'format-channels': ['{identifier}']
+        }
+    )
 ]
