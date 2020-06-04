@@ -58,7 +58,7 @@ class Channel(models.Model):
     job = models.ForeignKey(
         jobs_models.CronJob,
         on_delete=models.PROTECT,
-        to_field='job_id'
+        to_field='id'
     )
     user = models.ForeignKey(
         auth_models.CustomUser,
