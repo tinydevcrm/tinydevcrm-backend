@@ -120,7 +120,7 @@ class CreateJobView(APIView):
             refresh_view_scheduled_query = sql.SQL(
                 'REFRESH MATERIALIZED VIEW {view_name}'
             ).format(
-                view_name=sql.Identifier(str(request.user.id))
+                view_name=sql.Identifier(str(request.user.id), view_name)
             )
             refresh_view_sql_statement = sql.SQL(
                 "SELECT cron.schedule({crontab_def}, '{scheduled_query}')"
