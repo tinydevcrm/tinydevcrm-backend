@@ -39,19 +39,5 @@ CHANNEL_ID=$(echo $CHANNELS_RESPONSE | jq -r ".public_identifier")
 
 echo "Channel ID is: " $CHANNEL_ID
 
-# TODO: Open channel for cron job refreshes.
-echo "Run this command in order to test channel: " "curl --header \"Content-Type: application/json\" --header \"Authorization: JWT $ACCESS\" -X POST http://localhost:8000/channels/$CHANNEL_ID/open/"
-
 # Listen to channel for cron job refreshes. THIS WORKS RIGHT NOW BUT TAKES UP THE FULL TERMINAL, RUN IN A SEPARATE TERMINAL
 echo "Run this command in order to listen to channel: " "curl --header \"Content-Type: application/json\" --header \"Authorization: JWT $ACCESS\" -X GET http://localhost:8000/channels/$CHANNEL_ID/listen/"
-
-# Close channel.
-echo "Run this commmand in order to close channel: " "curl --header \"Content-Type: application/json\" --header \"Authorization: JWT $ACCESS\" -X POST http://localhost:8000/channels/$CHANNEL_ID/close/"
-
-# TODO: Create materialized view refreshes table to store job scheduler events.
-# Should be done as part of a migration.
-
-# TODO: Refresh materialized view.
-
-# TODO: Register materialized view with 'pg_cron' and insert materialized view
-# into refreshes table (good to separate out whether or not a refresh is active)
