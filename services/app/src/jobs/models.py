@@ -2,6 +2,7 @@
 Django models for jobs service.
 """
 
+from django.contrib.postgres import fields as psql_fields
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -20,14 +21,25 @@ class CronJob(models.Model):
     TODO: Figure out whether there's a way in order to extend automatically
     created table 'cron.job' for application-specific purposes.
     """
-    # ID from table 'cron.job', must be unique because it's referenced as a
-    # foreign key by the channels model.
-    job_id = models.IntegerField(unique=True)
+    # Due to multiple tasks needed to handle a specific cron job operation, and
+    # the inability to run an '.sql' file with function 'cron.schedule',
+    # establish a one-to-many correlation between this Django model and actual
+    # cron jobs scheduled in table 'cron.job'. Expand size of field and migrate
+    # as necessary.
+    #
+    # In order to get the channel ID, use the '_id' field for this Django model.
+    job_ids = psql_fields.ArrayField(
+        models.IntegerField(),
+        size=2
+    )
     user = models.ForeignKey(
         auth_models.CustomUser,
         on_delete=models.PROTECT,
         to_field='id'
     )
+    # TODO: Having multiple cron jobs refreshing the same view doesn't make any
+    # sense. Therefore, add a uniqueness constraint unique=True and add a
+    # validation check to jobs/views.py.
     view = models.ForeignKey(
         view_models.MaterializedView,
         on_delete=models.PROTECT,
