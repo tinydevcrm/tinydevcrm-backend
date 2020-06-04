@@ -52,6 +52,17 @@ INSTALLED_APPS = [
     'channels',
     # django-eventstream
     'django_eventstream',
+    # django-background-tasks: Background task manager for polling database.
+    # This is in lieu of a full-scale message queue or broker like Celery /
+    # RabbitMQ / Redis. A message queue is basically a backing store + a
+    # top-level orchestration process, and PostgreSQL and Django are already in
+    # use, so PostgreSQL acts as the backig store and Django is the top-level
+    # orchestration process. Small load should not require complex routing
+    # logic.
+    #
+    # If load issues appear, uninstall this module, use ZMQ pub/sub on
+    # PostgreSQL and issue events directly to the end-user channel in Pushpin.
+    'background_task',
 
     # Authentication service #
     'authentication',
