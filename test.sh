@@ -40,4 +40,4 @@ CHANNEL_ID=$(echo $CHANNELS_RESPONSE | jq -r ".public_identifier")
 echo "Channel ID is: " $CHANNEL_ID
 
 # Listen to channel for cron job refreshes. THIS WORKS RIGHT NOW BUT TAKES UP THE FULL TERMINAL, RUN IN A SEPARATE TERMINAL
-echo "Run this command in order to listen to channel: " "curl --header \"Content-Type: application/json\" --header \"Authorization: JWT $ACCESS\" -X GET http://localhost:8000/channels/$CHANNEL_ID/listen/"
+echo "Run this command in order to listen to channel: " "curl --header \"Content-Type: application/json\" --header \"Authorization: JWT $ACCESS\" -X GET http://localhost:7999/channels/$CHANNEL_ID/listen/"
