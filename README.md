@@ -115,7 +115,7 @@ To start:
     ```bash
     curl \
         --header "Content-Type: application/json" \
-        -X POST \
+        --request POST \
         --data '{"primary_email": "me@yingw787.com", "password": "test1234"}' \
         http://localhost:8000/auth/users/register/
     ```
@@ -127,7 +127,7 @@ To start:
     ```bash
     curl \
         --header "Content-Type: application/json" \
-        -X POST \
+        --request POST \
         --data '{"primary_email": "me+specialapp@yingw787.com", "password": "test1234"}' \
         http://localhost:8000/auth/users/register/
     ```
@@ -146,7 +146,7 @@ To start:
     ```bash
     curl \
         --header "Content-Type: application/json" \
-        -X POST \
+        --request POST \
         --data '{"primary_email": "me@yingw787.com", "password": "test1234"}' \
         http://localhost:8000/auth/tokens/obtain/
     ```
@@ -166,7 +166,7 @@ To start:
     parse the JSON response directly from the command line:
 
     ```bash
-    RESPONSE=$(curl --header "Content-Type: application/json" -X POST http://localhost:8000/auth/tokens/obtain/ --data '{"primary_email": "me@yingw787.com", "password": "test1234"}')
+    RESPONSE=$(curl --header "Content-Type: application/json" --request POST http://localhost:8000/auth/tokens/obtain/ --data '{"primary_email": "me@yingw787.com", "password": "test1234"}')
 
     REFRESH=$(echo $RESPNOSE | jq -r ".refresh")
     ACCESS=$(echo $RESPONSE | jq -r ".access")
@@ -177,6 +177,11 @@ To start:
     before continuing to proceed:
 
     ```bash
+    curl \
+        --header "Content-Type: application/json" \
+        --request POST \
+        --data '{"refresh": "$YOUR_JWT_REFRESH_TOKEN"}' \
+        http://localhost:8000/auth/tokens/refresh/
     ```
 
     If you wish to log out of your session, blacklist the refresh token using
@@ -184,12 +189,108 @@ To start:
     tokens generated from it) will not pass authentication:
 
     ```bash
-
+    curl \
+        --header "Content-Type: application/json" \
+        --request POST \
+        --data '{"refresh": "$YOUR_JWT_REFRESH_TOKEN"}' \
+        http://localhost:8000/auth/tokens/blacklist/
     ```
 
-### Requirements
+5.  Create a table, by specifying column definitions and uploading an Apache
+    Parquet file to fit some data. Parquet is used for data integrity purposes.
 
-### System Design Considerations
+    In order to create an Apache Parquet file from a CSV file, you can download
+    [`conda`](https://docs.conda.io/en/latest/), and with it,
+    [`pandas`](https://anaconda.org/anaconda/pandas) and
+    [`pyarrow`](https://anaconda.org/conda-forge/pyarrow):
+
+    ```bash
+    # Create a conda environment
+    $ conda create -n myenv python=3.8
+    $ conda activate myenv
+    (myenv) $ conda install pandas
+    (myenv) $ conda install pyarrow
+    ```
+
+    Open a Python shell and run the following statement:
+
+    ```python
+    import pandas as pd
+
+    pd.read_csv('/path/to/file.csv').to_parquet('/path/to/file.parquet')
+    ```
+
+    As an example, [`sample.parquet`](sample.parquet), is generated from
+    [`sample.csv`](sample.csv) using this method.
+
+    Then, create the table:
+
+    ```bash
+    curl \
+        --header "Content-Type: multipart/form-data" \
+        --header "Authorization: JWT $YOUR_JWT_ACCESS_TOKEN" \
+        --request POST \
+        --form "file=@/path/to/file.parquet" \
+        --form "table_name=$YOUR_TABLE_NAME" \
+        --form columns='[{"column_name": "SomeNumber", "column_type":"int"},{"column_name":"SomeString","column_type":"varchar(256)"}]' \
+        http://localhost:8000/tables/create/
+    ```
+
+6.  Create a materialized view, which caches a specific SQL query you want to
+    execute against your table (or tables, if you have multiple and want to
+    execute joins):
+
+    ```bash
+    curl \
+        --header "Content-Type: application/json" \
+        --header "Authorization: JWT $YOUR_JWT_ACCESS_TOKEN" \
+        --request POST \
+        --data '{"view_name": "$YOUR_VIEW_NAME", "sql_query": "SELECT * FROM $YOUR_TABLE_NAME WHERE \"SomeNumber\" = CAST( EXTRACT( SECOND FROM NOW()) * 1000000 AS INTEGER) % 10"}' \
+        http://localhost:8000/views/create/
+    ```
+
+7.  Create a cron job. This refreshes the materialized view in order to fetch
+    updated information from the underlying table, at a frequency for your
+    choosing.
+
+    ```bash
+    curl \
+        --header "Content-Type: application/json" \
+        --header "Authorization: JWT $YOUR_JWT_ACCESS_TOKEN" \
+        --request POST \
+        --data '{"view_name": "$YOUR_VIEW_NAME", "crontab_def": "* * * * *"}' \
+        http://localhost:8000/jobs/create/
+    ```
+
+    See [Crontab Guru](https://crontab.guru/) for an example of how to configure
+    cron jobs. TinyDevCRM supports materialized view refreshes on a per-minute
+    granularity.
+
+8.  Create a channel to listen for refresh events on the materialized view, via
+    HTTP/2 and Server-Sent Events:
+
+    ```bash
+    curl \
+        --header "Content-Type: application/json" \
+        --header "Authorization: JWT $YOUR_JWT_ACCESS_TOKEN" \
+        --request POST \
+        --data '{"job_id": "$YOUR_JOB_ID"}' \
+        http://localhost:8000/channels/create/
+    ```
+
+    This should return a UUID representing the channel's public identifier.
+
+9.  Listen to the channel; this process should run forever.
+
+    ```bash
+    curl \
+        --header "Content-Type: application/json" \
+        --header "Authorization: JWT $ACCESS" \
+        --request GET \
+        http://localhost:7999/channels/$YOUR_CHANNEL_UUID/listen/
+    ```
+
+### Design Specification
 
 To finish:
 
