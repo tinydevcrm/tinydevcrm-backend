@@ -245,7 +245,95 @@ REQ-1:
 
 REQ-2:
 
-### 4.2 System Feature 2 (and so on)
+### 4.2 Realtime Streaming
+
+#### 4.2.1 Description and Priority
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+This service uses HTTP/2 and [Server-Sent
+Events](https://en.wikipedia.org/wiki/Server-sent_events). The living
+specification for Server-Sent Events as of this writing can be found on [the
+HTML specification
+page](https://html.spec.whatwg.org/multipage/server-sent-events.html).
+
+### 4.3 Realtime Reverse Proxies
+
+#### 4.3.4 System Design Alternatives / Tradeoffs / Considerations
+
+This service uses [Pushpin](https://github.com/fanout/pushpin), a reverse proxy
+specifically designed for realtime APIs. Pushpin is fully open-source, has
+plenty of connectors, has a managed cloud CDN solution available, and leverages
+an open-source, underlying internal protocol called "GRIP".
+
+One alternative to Pushpin include [`nchan`](https://nchan.io/), which is
+currently an NGINX extensions module supporting realtime streaming needs. While
+this may have made deployments much easier had I used NGINX in production,
+discussions with the `nchan` maintainer indicates the NGINX API isn't designed
+for realtime needs, which results in issues such as memory leaks. `nchan` is
+currently undergoing a rewrite into a separate server, and if Pushpin no longer
+suits TinyDevCRM's requirements, `nchan` should be re-considered for usage at
+that time.
+
+Another alternative to Pushpin is [`envoy`](https://www.envoyproxy.io/), which
+is an enterprise-grade reverse proxy for cloud-native applications. Looking at
+the documentation indicates far more complexity than is necessary for
+TinyDevCRM's needs, and as TinyDevCRM's purpose is to eventually move off of the
+cloud and onto on-premise compute instances for long-term usage, Envoy doesn't
+look like the right fit for this project. Look at this project if a fork of
+TinyDevCRM for enterprise-grade use cases is ever commercially viable.
+
+### 4.4 Message brokering / message queueing
+
+#### 4.2.1 Description and Priority
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.4.4 System Design Alternatives / Tradeoffs / Considerations
+
+TinyDevCRM does not use an explicit message queue. Instead, messages are
+automatically queued using the PostgreSQL databasae as the underlying backing
+store, using `django_eventstream` and the setting
+`settings.EVENTSTREAM_STORAGE_CLASS`. This ensures events have the ability to
+suspend-to-disk in addition to suspend-to-RAM, which may be cheaper (if disk vs.
+RAM costs are passed to the consumer), and more secure (since disk can be
+encrypted).
+
+Correspondingly, TinyDevCRM also does not use an off-the-shelf message broker.
+Instead, a custom Python script, `broker.py`, uses `psycopg2`'s advanced
+[asynchronous
+notifications](https://www.psycopg.org/docs/advanced.html#asynchronous-notifications)
+feature in order to listen to a specific channel, fetch text-based payloads sent
+on that channel, converts it into JSON, translates that JSON into a package sent
+out on the correct channel. This arrangement limits the amount of "magic" that
+goes into message brokering, is easy to debug and troubleshoot (run as a
+separate Docker container and examine logs printed to stdout), easy to scale
+(since the broker is fronted with a custom `django-admin` command, it can be
+Dockerized and run as a standalone container), and performant enough given a
+light load.
+
+If load requirements become an issue in production, Pushpin supports ZeroMQ
+pub/sub for client connections to push directly to the end-user channel. A
+ZeroMQ client can be installed on the PostgreSQL database instance, and a
+foreign data wrapper / stored procedure templates written and installed to push
+PostgreSQL events onto a ZeroMQ channel for publishing to Pushpin. This means
+the web application backend only needs to orchestrate channel setup and
+teardown, and that the database and reverse proxy can scale independently to
+handle increased load.
+
+Popular message brokers / message queue solutions for Python-based web
+application needs include RabbitMQ, Celery, and Redis. I did not choose these
+solutions since they would cause dependency bloat and maintenance overhead in
+the future, and since I already had a backing store and the ability to create
+simple top-level orchestration processes already. If scaling issues prove more
+difficult than configuring additional channels (and migrating other users to
+separate TinyDevCRM instances), re-consider using these solutions.
 
 __________
 
