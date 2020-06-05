@@ -1,24 +1,23 @@
 # IEEE Software Requirements Specification Template
 
-Copyright 1999 Karl E. Wiegers
+Copyright 2020-Present Ying Wang
 
-I believe this document (translated from [PDF](srs_template-ieee.pdf) to
-Markdown for better parsing support, performance, and blob size) complies with
-[IEEE Standard 830-1998](IEEE-Std-830-1998.pdf) defined best practices, and I
-plan to apply this documentation standard for TinyDevCRM going forward into
-product development.
+This document serves as a [living
+document](https://en.wikipedia.org/wiki/Living_document) for TinyDevCRM's system
+design, tradeoffs, and otherwise considerations. It complies with [IEEE Standard
+830-1998](IEEE-Std-830-1998.pdf) defined best practices.
 
 __________
 
 ## Software Requirements Specification
 
-for ${PROJECT}
+for TinyDevCRM
 
-Version ${VERSION} ${APPROVED | NOT APPROVED}
+Version MVP
 
-${ORGANIZATION}
+TinyDevCRM / Ying Wang
 
-${DATE_CREATED}
+June 5th, 2020
 
 __________
 
@@ -30,7 +29,7 @@ __________
 
 Name | Date | Reason For Changes | Version
 --- | --- | --- | ---
-${NAME} | ${DATE} | ${REASON_FOR_CHANGES} | ${VERSION}
+Ying Wang | 06/05/2020 | Initial definition | MVP
 
 __________
 
@@ -38,10 +37,20 @@ __________
 
 ### 1.1 Purpose
 
-*Identify the product whose software requirements are specified in this
-document, including the revision or release number. Describe the scope of the
-product that is covered by this SRS, particularly if this SRS describes only
-part of the system or a single subsystem.*
+TinyDevCRM evolved in purpose from a CRM (customer relationship management)
+platform for software engineers, to a general data layer for event-driven
+clients, to what may be best described as a hybrid OLTP/OLAP platform enabling
+streaming "business intelligence"-like purposes. TinyDevCRM serves as the
+one-stop data lake for personal apps and side projects.
+
+The scope of the project covered in this specific document includes the Django
+web application backend, the PostgreSQL data model, and the Pushpin realtime API
+reverse proxy.
+
+This document does not currently cover any graphical user interfaces (GUIs),
+connectors or adaptors, deep dives into dependencies, or deployment models.
+Documentation on those sections should be covered by their respective
+respositories, or relocated to a separate repository in the near future.
 
 ### 1.2 Document Conventions
 
@@ -53,12 +62,17 @@ is to have its own priority.*
 
 ### 1.3 Intended Audience and Reading Suggestions
 
-*Describe the different types of reader that the document is intended for, such
-as developers, project managers, marketing staff, users, testers, and
-documentation writers. Describe what the rest of this SRS contains and how it is
-organized. Suggest a sequence for reading the document, beginning with the
-overview sections and proceeding through the sections that are most pertinent to
-each reader type.*
+This document is intended for me (my future self) when coming back to this
+project to make additional modifications and consider additional tradeoffs, in
+order to ground the purpose of the project and inform future actionables and
+deliverables.
+
+This document may be read and understood by other technical users looking to
+contribute or fork this project for their own personal needs. This document is
+not intended as a user guide or a how-to guide.
+
+Reading through the guide from top to bottom should be fine for understanding
+all the content contained here.
 
 ### 1.4 Product Scope
 
