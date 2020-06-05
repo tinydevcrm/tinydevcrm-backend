@@ -290,49 +290,41 @@ To start:
         http://localhost:7999/channels/$YOUR_CHANNEL_UUID/listen/
     ```
 
-### Design Specification
+### Miscellaneous development commands
 
-To finish:
+In order to log into the development PostgreSQL instance, run:
 
 ```bash
-pushd infra-dev
-    make dev-down
-popd
+make -f infra-dev/Makefile dev-psql
 ```
 
 ### Running the production environment
 
-To start:
+To start the production cluster:
 
 ```bash
-pushd infra-prod
-    make prod-up
-popd
+make -f infra-prod/Makefile prod-up
 ```
 
-To finish:
+To teardown the production cluster:
 
 ```bash
-pushd infra-prod
-    make prod-down
-popd
+make -f infra-prod/Makefile prod-down
 ```
 
-To see the templated configuration file (important for building the correct
-Docker images to ship to ECR):
+### Miscellaneous production commands
+
+To see the templated `docker-compose.aws.yaml` configuration file (important for
+building the correct Docker images to ship to ECR):
 
 ```bash
-pushd infra-prod
-    make prod-config
-popd
+make -f infra-prod/Makefile prod-config
 ```
 
-To connect to `psql`:
+To log into the production PostgreSQL instance, run:
 
 ```bash
-pushd infra-prod
-    make prod-psql
-popd
+make -f infra-prod/Makefile prod-psql
 ```
 
 ### Creating the AWS stack
