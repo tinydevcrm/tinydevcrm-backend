@@ -245,6 +245,101 @@ REQ-1:
 
 REQ-2:
 
+
+### 4.2 User Creation
+
+#### 4.2.1 Description and Priority
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+
+### 4.2 Data Import
+
+#### 4.2.1 Description and Priority
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+
+
+
+### 4.2 Table Definitions
+
+#### 4.2.1 Description and Priority
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+
+
+### 4.2 Materialized Views
+
+#### 4.2.1 Description and Priority
+
+TinyDevCRM can define materialized views on a user's tables using an arbitrary
+read-only SQL statement passed-through an HTTP POST request. The limitations of
+this SQL statement is it cannot be comprised of multiple SQL statements (i.e. no
+semicolons), and must begin with a `SELECT`, `TABLES`, or `VALUES` query to
+enforce read-only status.
+
+The benefit of creating a materialized view is caching a specific query within
+PostgreSQL, while referencing the same underlying data. This way, different
+requesters have access to the same source of truth.
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+
+
+### 4.2 Cron Job Definitions
+
+#### 4.2.1 Description and Priority
+
+TinyDevCRM runs cron jobs in order to manage lifecycles of different PostgreSQL
+tables and views. Currently, cron jobs can be run in order to refresh a specific
+materialized view,
+
+#### 4.2.2 Stimulus / Response Sequences
+
+#### 4.2.3 Functional Requirements
+
+#### 4.2.4 System Design Alternatives / Tradeoffs / Considerations
+
+One alternative to `pg_cron` is to run `cron` apart from having a special
+PostgreSQL extension. One way to do this would be to set up a Docker container
+with `cron` running as the foreground process, in order to issue events to a
+separate server. This would be far easier to set up using a vanilla
+database and a compute layer, and translates better to cloud-native
+infrastructure. However the system design may force a possibility of network
+faults (cloud infrastructure is completely virtualized, but on-premises may not
+be) and separate management overhead (e.g. database compute goes down, cron
+actions ineffectual).
+
+Another alternative to `pg_cron` would be to run AWS CloudWatch and use AWS
+Lambda in a serverless fashion to poll the database and refresh materialized
+views. AWS Lambda does offer 1 million free function calls as part of its free
+tier. However, AWS Lambda requires maintaining an entire runtime that needs to
+be migrated per runtime upgrade, is difficult to version especially with AWS
+CloudFormation, and needs to interface with other AWS services in order to run.
+More importantly, it is native to AWS and cannot be migrated to another cloud
+provider or to an on-premises deployment without changing source code. Last,
+refreshes on a per-minute granularity would only allow ~25 materialized views to
+be refreshed before running into billing concerns, or before materialized views
+must be chained together.
+
 ### 4.2 Realtime Streaming
 
 #### 4.2.1 Description and Priority
@@ -260,6 +355,17 @@ Events](https://en.wikipedia.org/wiki/Server-sent_events). The living
 specification for Server-Sent Events as of this writing can be found on [the
 HTML specification
 page](https://html.spec.whatwg.org/multipage/server-sent-events.html).
+Server-Sent events are unidirectional (data flows from server to client), uses
+HTTP for better compliance with existing infrastructure (pass-through packet
+inspection, no SDK required), and supports automatic event playback in case a
+connection is dropped. Disadvantages of SSE, such as UTF-8 support only,
+connection limits per browser, and lower popularity than WebSockets, don't
+currently outweigh the perceived benefits.
+
+Other alternatives to Server-Sent Events include WebSockets and HTTP
+long-polling, although it remains unlikely Server-Sent Events will be deprecated
+since it is integrated into the HTML standard. If channel limits occur, update
+the Django model to listen to multiple jobs per channel.
 
 ### 4.3 Realtime Reverse Proxies
 
