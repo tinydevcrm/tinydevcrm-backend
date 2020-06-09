@@ -16,9 +16,9 @@ dev-up:
 	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run web python3 manage.py flush --no-input
 	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run web python3 manage.py migrate
 	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run web python3 manage.py collectstatic --no-input
-	# Redirect stdout/stderr to a log file and background this process at the
-	# same time: https://unix.stackexchange.com/a/106641
-	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose run web python3 manage.py startbroker > /tmp/broker.txt 2>&1 &
+	# Start the broker b/w separate PostgreSQL and Pushpin channels as a
+	# separate Docker container.
+	GIT_REPO_ROOT=${GIT_REPO_ROOT} docker-compose -f ${GIT_REPO_ROOT}/infra-dev/docker-compose.development.yaml --verbose up -d --build broker
 	# NOTE: Setting the hardcoded hostname alias is important for configuring
 	# /etc/pushpin/routes, which is important for sending the response to the
 	# appropriate location.
