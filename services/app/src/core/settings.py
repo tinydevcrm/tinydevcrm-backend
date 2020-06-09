@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     # Jobs service #
     'jobs',
     # Channels service #
-    'channels_app.apps.ChannelsConfig',
+    'channels_app',
 ]
 
 MIDDLEWARE = [
