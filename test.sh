@@ -8,7 +8,7 @@ RESPONSE=$(curl --header "Content-Type: application/json" -X POST http://localho
 
 echo "Response is: " $RESPONSE
 
-REFRESH=$(echo $RESPNOSE | jq -r ".refresh")
+REFRESH=$(echo $RESPONSE | jq -r ".refresh")
 ACCESS=$(echo $RESPONSE | jq -r ".access")
 
 echo "Refresh is: " $REFRESH
