@@ -27,7 +27,7 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 
-from . import Dummy
+from . import Redirects
 
 
 urlpatterns = [
@@ -81,10 +81,10 @@ urlpatterns = [
         )
     ),
     path(
-        # Matches the root route only.
-        # TODO: Replace with API documentation index.html root.
+        # Matches the root route only, other non-matching paths should return
+        # HTTP 404.
         '',
-        Dummy.HomePageView.as_view(),
-        name='rootdummy'
+        Redirects.RedirectToDocsView.as_view(),
+        name='redirect_to_docs'
     ),
 ]
