@@ -26,10 +26,12 @@ from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
 
 from channels_app import broker
+from channels_app import utils as channels_utils
 
 
 class Command(BaseCommand):
     help = 'Starts the background process to broker messages between channels on the PostgreSQL database and the Pushpin reverse proxy.'
 
     def handle(self, *args, **kwargs):
+        channels_utils.execute_storedproc_trigger_on_refresh()
         broker.broker_proc()
