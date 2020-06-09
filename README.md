@@ -249,6 +249,9 @@ To start:
         http://localhost:8000/views/create/
     ```
 
+    You can pass any single SQL statement, provided that it starts with
+    'SELECT', 'TABLES', or 'VALUES' (i.e. is read-only).
+
 7.  Create a cron job. This refreshes the materialized view in order to fetch
     updated information from the underlying table, at a frequency for your
     choosing.
