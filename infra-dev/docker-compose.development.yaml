@@ -23,6 +23,25 @@ services:
       dev_network:
     links:
       - db:db
+  broker:
+    build:
+      context: ${GIT_REPO_ROOT}/services/app
+      dockerfile: development.Dockerfile
+    command: python manage.py startbroker
+    volumes:
+      - ${GIT_REPO_ROOT}/services/app/src/:/usr/src/app/
+    env_file:
+      # Copy ${GIT_REPO_ROOT}/services/app/conf/.env.dev-example to
+      # ${GIT_REPO_ROOT}/services/app/conf/.env.dev
+      - ${GIT_REPO_ROOT}/services/app/conf/.env.dev
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+    networks:
+      dev_network:
+    links:
+      - db:db
   db:
     build:
       context: ${GIT_REPO_ROOT}/services/db
