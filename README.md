@@ -46,6 +46,13 @@
     aws-cli/1.18.35 Python/3.7.7 Linux/5.4.0-28-generic botocore/1.15.35
     ```
 
+-   `jq`, JSON parsing utility.
+
+    ```bash
+    $ jq --version
+    jq-1.6
+    ```
+
 ## Getting Started
 
 ```bash
