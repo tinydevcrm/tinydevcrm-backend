@@ -1,6 +1,6 @@
 asgiref==3.2.3
 attrs==19.3.0
-autobahn==20.4.3
+autobahn==20.12.3
 Automat==20.2.0
 awscli==1.18.21
 backcall==0.1.0
